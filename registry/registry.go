@@ -56,11 +56,5 @@ func MustGet(id string) adapter.AgentAdapter {
 	return a
 }
 
-// DetectAll scans for all registered adapters and returns which are found.
-func DetectAll() []adapter.DetectionResult {
-	// TODO: implement concurrent detection
-	return nil
-}
-
 // Ensure context import is used (for future use).
 var _ = context.Background

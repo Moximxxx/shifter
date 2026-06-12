@@ -7,6 +7,27 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// StripJSONComments removes // line comments from JSON content.
+// This allows reading JSONC (JSON with Comments) files.
+func StripJSONComments(content string) string {
+	var result strings.Builder
+	lines := strings.Split(content, "\n")
+	for _, line := range lines {
+		// Remove // comments, but not inside strings
+		trimmed := strings.TrimSpace(line)
+		if strings.HasPrefix(trimmed, "//") {
+			continue
+		}
+		// Handle trailing comments (naive — good enough for config files)
+		if idx := strings.Index(line, " //"); idx >= 0 {
+			line = line[:idx]
+		}
+		result.WriteString(line)
+		result.WriteString("\n")
+	}
+	return result.String()
+}
+
 // ParseFrontMatter extracts YAML frontmatter and body from Markdown content.
 // Returns the frontmatter as a map, the body text, and any error.
 func ParseFrontMatter(content string) (map[string]interface{}, string, error) {

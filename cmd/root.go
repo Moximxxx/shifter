@@ -10,8 +10,8 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/moximxxx/shifter/engine/detect"
 	"github.com/moximxxx/shifter/engine/port"
-	"github.com/moximxxx/shifter/registry"
 )
 
 var rootCmd = &cobra.Command{
@@ -191,38 +191,9 @@ func runPort(cmd *cobra.Command, args []string) error {
 }
 
 func runDetect(cmd *cobra.Command, args []string) error {
-	ids := registry.ListIDs()
+	results := detect.ScanAll()
 
 	if detectJSON {
-		type detectOutput struct {
-			ID      string                  `json:"id"`
-			Name    string                  `json:"name"`
-			Found   bool                    `json:"found"`
-			Summary map[string]int          `json:"summary,omitempty"`
-			Paths   []string                `json:"paths,omitempty"`
-		}
-		var results []detectOutput
-		for _, id := range ids {
-			a, err := registry.Get(id)
-			if err != nil {
-				continue
-			}
-			dr, err := a.Detect()
-			if err != nil {
-				continue
-			}
-			out := detectOutput{
-				ID:    id,
-				Name:  a.Name(),
-				Found: dr.Found,
-				Summary: dr.Summary,
-			}
-			out.Paths = append(out.Paths, dr.GlobalPaths...)
-			if dr.ProjectPath != "" {
-				out.Paths = append(out.Paths, dr.ProjectPath)
-			}
-			results = append(results, out)
-		}
 		enc := json.NewEncoder(cmd.OutOrStdout())
 		enc.SetIndent("", "  ")
 		return enc.Encode(results)
@@ -230,28 +201,16 @@ func runDetect(cmd *cobra.Command, args []string) error {
 
 	fmt.Println("Scanning for configured coding agents...")
 	fmt.Println()
-	for _, id := range ids {
-		a, err := registry.Get(id)
-		if err != nil {
-			continue
-		}
-		dr, err := a.Detect()
-		if err != nil {
-			continue
-		}
-
-		status := "✗ not configured"
-		if dr.Found {
-			parts := []string{"✓"}
-			parts = append(parts, a.Name())
-			for k, v := range dr.Summary {
+	for _, r := range results {
+		if r.Found {
+			parts := []string{"✓", r.Name}
+			for k, v := range r.Summary {
 				parts = append(parts, fmt.Sprintf("%d %s", v, k))
 			}
-			status = strings.Join(parts, "  ")
+			fmt.Printf("  %s\n", strings.Join(parts, "  "))
 		} else {
-			status = fmt.Sprintf("✗ %s (not configured)", a.Name())
+			fmt.Printf("  ✗ %s (not configured)\n", r.Name)
 		}
-		fmt.Printf("  %s\n", status)
 	}
 
 	fmt.Println("\nUse 'shifter port <source> --to <target>' to port configs.")
