@@ -228,9 +228,10 @@ func runDetect(cmd *cobra.Command, args []string) error {
 		return enc.Encode(results)
 	}
 
-	fmt.Println("Scanning for configured coding agents...\n")
+	fmt.Println("Scanning for configured coding agents...")
+	fmt.Println()
 	for _, id := range ids {
-		a, err := adapter.Get(id)
+		a, err := registry.Get(id)
 		if err != nil {
 			continue
 		}
