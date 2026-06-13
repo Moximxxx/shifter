@@ -1,0 +1,81 @@
+##########################################################
+# Aider 综合工作流配置
+# 位置: .aider.conf.yml
+# 基于: Aider-AI/aider 官方文档 + 社区实践
+##########################################################
+
+#############
+# 模型配置:
+#############
+model: openrouter/anthropic/claude-sonnet-4-20250514
+weak-model: openrouter/anthropic/claude-haiku-3-5
+editor-model: openrouter/anthropic/claude-sonnet-4-20250514
+edit-format: diff
+reasoning-effort: high
+
+################
+# 仓库地图:
+################
+map-tokens: 2048
+map-refresh: auto
+map-multiplier-no-files: true
+
+###############
+# Git 行为:
+###############
+git: true
+gitignore: true
+auto-commits: false       # 让开发者审查后再提交
+dirty-commits: false
+attribute-author: true
+attribute-committer: true
+attribute-commit-message-author: false
+attribute-co-authored-by: true
+git-commit-verify: false
+
+########################
+# 修复和提交:
+########################
+lint: true
+lint-cmd:
+  - "python: ruff check --select E9,F63,F7,F82"
+  - "typescript: npx eslint --quiet"
+  - "go: golangci-lint run ./..."
+auto-lint: true
+test-cmd: "make test"
+auto-test: true
+
+###############
+# 输出设置:
+###############
+dark-mode: true
+pretty: true
+stream: true
+show-diffs: true
+
+#################
+# 缓存:
+#################
+cache-prompts: true
+cache-keepalive-pings: 10
+
+############
+# 文件:
+############
+read:
+  - CONVENTIONS.md
+  - .aider.conf.yml
+
+################
+# 其它设置:
+################
+vim: false
+chat-language: zh
+yes-always: false
+suggest-shell-commands: true
+fancy-input: true
+detect-urls: true
+analytics-disable: true
+
+# 环境变量文件
+env-file: .env

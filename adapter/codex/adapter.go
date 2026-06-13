@@ -62,15 +62,23 @@ type codexConfig struct {
 	ApprovalPolicy         string                       `toml:"approval_policy,omitempty"`
 	SandboxMode            string                       `toml:"sandbox_mode,omitempty"`
 	ModelReasoningEffort   string                       `toml:"model_reasoning_effort,omitempty"`
+	ModelReasoningSummary  string                       `toml:"model_reasoning_summary,omitempty"`
+	ModelVerbosity         string                       `toml:"model_verbosity,omitempty"`
 	Personality            string                       `toml:"personality,omitempty"`
 	WebSearch              string                       `toml:"web_search,omitempty"`
 	LogDir                 string                       `toml:"log_dir,omitempty"`
+	HideAgentReasoning     bool                         `toml:"hide_agent_reasoning,omitempty"`
+	ShowRawAgentReasoning  bool                         `toml:"show_raw_agent_reasoning,omitempty"`
+	ProjectDocMaxBytes     int                          `toml:"project_doc_max_bytes,omitempty"`
 	ShellEnvironmentPolicy map[string]interface{}        `toml:"shell_environment_policy,omitempty"`
 	Features               map[string]interface{}        `toml:"features,omitempty"`
+	Tools                  map[string]interface{}        `toml:"tools,omitempty"`
 	MCPServers             map[string]codexMCPServer     `toml:"mcp_servers,omitempty"`
 	Agents                 map[string]codexAgent         `toml:"agents,omitempty"`
-	Hooks                  []codexHook                   `toml:"hooks,omitempty"`
+	Hooks                  map[string][]codexHookGroup   `toml:"hooks,omitempty"`
+	SandboxWorkspaceWrite  map[string]interface{}        `toml:"sandbox_workspace_write,omitempty"`
 }
+
 
 type codexMCPServer struct {
 	Command string            `toml:"command,omitempty"`
@@ -85,11 +93,17 @@ type codexAgent struct {
 	Model        string   `toml:"model,omitempty"`
 }
 
-type codexHook struct {
-	Event   string   `toml:"event"`
-	Command string   `toml:"command"`
-	Args    []string `toml:"args,omitempty"`
+type codexHookGroup struct {
+	Matcher string         `toml:"matcher,omitempty"`
+	Hooks   []codexHookAction `toml:"hooks,omitempty"`
 }
+
+type codexHookAction struct {
+	Type          string   `toml:"type"`
+	Command       string   `toml:"command,omitempty"`
+	StatusMessage string   `toml:"statusMessage,omitempty"`
+}
+
 
 // Detect checks whether Codex is configured.
 func (a *Adapter) Detect() (adapter.DetectionResult, error) {
@@ -317,13 +331,26 @@ func (a *Adapter) readConfig(cc *codexConfig, cfg *canonical.ShifterConfig) {
 		})
 	}
 
-	// Hooks
-	for _, h := range cc.Hooks {
-		cfg.Hooks = append(cfg.Hooks, canonical.HookDef{
-			Event:   h.Event,
-			Command: h.Command,
-			Args:    h.Args,
-		})
+	// Hooks (map format: event -> group list)
+	for event, groups := range cc.Hooks {
+		for _, group := range groups {
+			for _, action := range group.Hooks {
+				cfg.Hooks = append(cfg.Hooks, canonical.HookDef{
+					Event:     event,
+					Matcher:   group.Matcher,
+					Command:   action.Command,
+					StatusMsg: action.StatusMessage,
+				})
+			}
+		}
+	}
+
+	// Features
+	if cc.Features != nil {
+		if cfg.Settings.Extra == nil {
+			cfg.Settings.Extra = make(map[string]interface{})
+		}
+		cfg.Settings.Extra["features"] = cc.Features
 	}
 }
 
@@ -376,13 +403,22 @@ func (a *Adapter) buildConfig(cfg *canonical.ShifterConfig, warnings *[]canonica
 		}
 	}
 
-	// Hooks
-	for _, hook := range cfg.Hooks {
-		cc.Hooks = append(cc.Hooks, codexHook{
-			Event:   hook.Event,
-			Command: hook.Command,
-			Args:    hook.Args,
-		})
+	// Hooks — group by event
+	if len(cfg.Hooks) > 0 {
+		cc.Hooks = make(map[string][]codexHookGroup)
+		for _, hook := range cfg.Hooks {
+			group := codexHookGroup{
+				Matcher: hook.Matcher,
+				Hooks: []codexHookAction{
+					{
+						Type:          "command",
+						Command:       hook.Command,
+						StatusMessage: hook.StatusMsg,
+					},
+				},
+			}
+			cc.Hooks[hook.Event] = append(cc.Hooks[hook.Event], group)
+		}
 	}
 
 	// If there are skills, note experimental support

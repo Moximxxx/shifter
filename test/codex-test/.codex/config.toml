@@ -1,0 +1,132 @@
+# ============================================================================
+# Codex CLI - 综合工作流配置 (Comprehensive Workflow Configuration)
+# 位置: .codex/config.toml
+# 基于: OpenAI 官方文档 + feiskyer/codex-settings 社区实践
+# ============================================================================
+
+# ---- 模型配置 ----
+model = "gpt-5"
+model_reasoning_effort = "high"
+model_reasoning_summary = "detailed"
+model_verbosity = "medium"
+
+# ---- 安全策略 ----
+approval_policy = "on-request"
+sandbox_mode = "workspace-write"
+
+# ---- UI ----
+hide_agent_reasoning = false
+show_raw_agent_reasoning = true
+
+# ---- 功能开关 ----
+[features]
+multi_agent = true
+hooks = true
+web_search = true
+
+# ---- MCP 服务器 ----
+[mcp_servers.github]
+command = "npx"
+args = ["-y", "@modelcontextprotocol/server-github"]
+env = { GITHUB_TOKEN = "${GITHUB_TOKEN}" }
+enabled = true
+
+[mcp_servers.filesystem]
+command = "npx"
+args = ["-y", "@modelcontextprotocol/server-filesystem", "/tmp"]
+enabled = true
+
+[mcp_servers.context7]
+command = "npx"
+args = ["-y", "@upstash/context7-mcp@latest"]
+enabled = true
+
+[mcp_servers.postgres]
+command = "npx"
+args = ["-y", "@modelcontextprotocol/server-postgres"]
+env = { DATABASE_URL = "${DATABASE_URL}" }
+enabled = true
+startup_timeout_sec = 15
+tool_timeout_sec = 60
+
+# ---- 子代理定义 ----
+[agents.code-reviewer]
+description = "审查代码质量、安全性和最佳实践"
+system_prompt = """你是一位资深代码审查专家。审查代码时遵循以下清单：
+
+1. 正确性：检查逻辑错误、边界条件、空指针
+2. 安全性：检查 SQL 注入、XSS、CSRF、密钥泄露
+3. 性能：检查 N+1 查询、不必要的循环、内存泄漏
+4. 可维护性：检查命名规范、代码重复、函数长度
+5. 测试覆盖：检查关键路径是否有测试
+
+输出格式：
+- 🔴 Critical: 必须修复的问题
+- 🟡 Medium: 建议修复的问题
+- 🟢 Minor: 可选的改进建议"""
+tools = ["Read", "Glob", "Grep"]
+model = "gpt-5"
+
+[agents.test-writer]
+description = "为代码生成单元测试和集成测试"
+system_prompt = """你是测试专家。为指定代码生成测试：
+
+1. 使用 Arrange-Act-Assert 模式
+2. 覆盖正常路径、边界条件、错误路径
+3. Mock 外部依赖，不 mock 内部逻辑
+4. 测试名称格式：should_<行为>_when_<条件>
+5. 优先使用表驱动测试"""
+tools = ["Read", "Write", "Edit", "Glob", "Grep", "Bash"]
+model = "gpt-5"
+
+[agents.architect]
+description = "系统架构设计和技术方案评审"
+system_prompt = """你是系统架构师。负责：
+
+1. 分析需求并设计系统架构
+2. 技术选型和 trade-off 分析
+3. 数据库设计和 API 设计
+4. 安全架构评审
+5. 性能瓶颈分析
+
+始终提供至少 2 个备选方案，并标明推荐方案及理由。"""
+tools = ["Read", "Glob", "Grep", "WebSearch"]
+
+# ---- 钩子系统 ----
+[[hooks.SessionStart]]
+matcher = "*"
+  [[hooks.SessionStart.hooks]]
+  type = "command"
+  command = "bash .codex/hooks/session-start.sh"
+  statusMessage = "加载会话上下文..."
+
+[[hooks.PreToolUse]]
+matcher = "Bash"
+  [[hooks.PreToolUse.hooks]]
+  type = "command"
+  command = "bash .codex/hooks/destructive-guard.sh"
+
+[[hooks.PreToolUse]]
+matcher = "Write|Edit"
+  [[hooks.PreToolUse.hooks]]
+  type = "command"
+  command = "bash .codex/hooks/pre-edit-check.sh"
+
+[[hooks.PostToolUse]]
+matcher = "Write|Edit"
+  [[hooks.PostToolUse.hooks]]
+  type = "command"
+  command = "bash .codex/hooks/post-edit-verify.sh"
+
+[[hooks.Stop]]
+matcher = "*"
+  [[hooks.Stop.hooks]]
+  type = "command"
+  command = "bash .codex/hooks/stop-checklist.sh"
+
+# ---- 环境变量 ----
+[shell_environment_policy]
+include_only = ["PATH", "HOME", "NODE_ENV", "DATABASE_URL", "GITHUB_TOKEN"]
+
+# ---- 项目指令 ----
+project_doc_max_bytes = 65536

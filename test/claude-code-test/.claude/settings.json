@@ -1,0 +1,123 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "model": "sonnet",
+  "permissions": {
+    "allow": [
+      "Bash(npm:*)",
+      "Bash(go:*)",
+      "Bash(git:*)",
+      "Bash(docker:*)",
+      "Bash(bun:*)",
+      "Bash(npx:*)",
+      "Read(~/.zshrc)",
+      "Read(/etc/hosts)",
+      "Read(./docs/**)",
+      "Read(./specs/**)"
+    ],
+    "deny": [
+      "Bash(rm -rf /*)",
+      "Bash(shutdown)",
+      "Bash(curl *)",
+      "Bash(wget *)",
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Edit(./.env)",
+      "Edit(./.env.*)",
+      "Edit(./*.pem)",
+      "Edit(./*.key)"
+    ],
+    "defaultMode": "edit",
+    "additionalDirectories": ["/tmp", "/var/log"]
+  },
+  "env": {
+    "NODE_ENV": "development",
+    "GO_ENV": "development"
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "npx prettier --write ${CLAUDE_FILES}"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "npx prettier --write ${CLAUDE_FILES}"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash(git push *)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '⚠ 确认推送前已通过所有测试'"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash(git commit *)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/pre-commit.sh"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '📋 会话开始 — 读取项目上下文...' && cat CLAUDE.md | head -5"
+          }
+        ]
+      }
+    ]
+  },
+  "mcpServers": {
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_TOKEN": "${GITHUB_TOKEN}"
+      }
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/tmp"]
+    },
+    "postgres": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-postgres"],
+      "env": {
+        "DATABASE_URL": "${DATABASE_URL}"
+      }
+    },
+    "slack": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-slack"],
+      "env": {
+        "SLACK_BOT_TOKEN": "${SLACK_BOT_TOKEN}"
+      }
+    }
+  },
+  "sandbox": {
+    "enabled": true,
+    "filesystem": {
+      "denyRead": [".env", ".env.*", "*.pem", "*.key", "credentials.*"],
+      "denyWrite": [".env", ".env.*", "*.pem", "*.key", "/etc/*", "/usr/*"]
+    }
+  }
+}
