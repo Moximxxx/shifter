@@ -1,0 +1,224 @@
+﻿{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "deepseek/deepseek-v4-flash",
+
+  // 小模型 — 用于标题生成、压缩摘要等轻量任务，节省成本
+  "small_model": "deepseek/deepseek-v4-flash",
+
+  // ================================================================
+  // 代码格式化 — LLM 生成代码后自动格式化
+  // 配置后需重启 OpenCode 生效
+  // ================================================================
+  "formatter": {
+    "prettier": {
+      "extensions": [".ts", ".tsx", ".js", ".jsx", ".json", ".md"]
+    }
+  },
+
+  // ================================================================
+  // 文件监控 — 排除大目录减少开销
+  // ================================================================
+  "watcher": {
+    "ignore": ["node_modules/**", "dist/**", ".git/**", ".opencode/tmp/**"]
+  },
+
+  // 自动更新 — 通知但不自动安装
+  "autoupdate": "notify",
+
+  // ================================================================
+  // 指令 — 引用规则文件（支持 glob、远程 URL）
+  // 与 AGENTS.md 自动合并到 LLM 上下文
+  // ================================================================
+  "instructions": [
+    "./AGENTS.md",
+    ".opencode/constraints/contract-mechanism.md",
+    ".opencode/constraints/tech-stack/typescript.md",
+    ".opencode/constraints/tech-stack/react.md"
+  ],
+
+  // 默认代理（必须是 primary 模式）
+  "default_agent": "coordinator",
+
+  // ================================================================
+  // 上下文压缩 — 防止 Token 溢出
+  // ================================================================
+  "compaction": {
+    "auto": true,
+    "prune": true,
+    "reserved": 10000
+  },
+
+  // ================================================================
+  // 全局权限（宽松默认 + 关键安全限制）
+  // 格式: "allow" | "ask" | "deny"
+  // 对象语法支持 glob 模式，最后匹配的规则优先
+  // ================================================================
+  "permission": {
+    // 默认全部允许
+    "*": "allow",
+
+    // 外部目录访问需确认
+    "external_directory": "ask",
+    // 防死循环检测
+    "doom_loop": "ask",
+
+    // .env 文件保护（仅允许 .env.example）
+    "read": {
+      "*": "allow",
+      "*.env": "deny",
+      "*.env.*": "deny",
+      "*.env.example": "allow"
+    },
+
+    // 技能全局允许
+    "skill": {
+      "*": "allow"
+    },
+
+    // 子代理调用权限：默认禁止所有子代理唤起其他子代理
+    // 仅 coordinator 通过 agent 级配置覆盖为全部允许
+    "task": {
+      "*": "deny"
+    }
+  },
+
+  // ================================================================
+  // Agent 定义
+  // 可选属性: description, mode, hidden, color, temperature, steps,
+  //           prompt, model, tools, permission
+  // mode: "primary" | "subagent" | "all"
+  // hidden: true — 不在 @ 自动补全菜单显示（内部子代理）
+  // ================================================================
+  "agent": {
+    // ---- 主代理 ----
+    "coordinator": {
+      "description": "任务协调者。负责任务拆分、委派执行、验证结果。一切任务的入口与出口。",
+      "mode": "primary",
+      "model": "deepseek/deepseek-v4-pro",
+      "color": "#FF6B6B",
+      "temperature": 0.2,
+      "prompt": "{file:./.opencode/agents/coordinator.md}",
+      "permission": {
+        // coordinator 不直接修改源码，仅允许写入合同文件到 .opencode/contracts/
+        "edit": {
+          "*": "deny",
+          ".opencode/contracts/**": "allow"
+        },
+        "bash": "deny",
+        // 覆盖全局 task 限制：coordinator 可调用全部子代理
+        "task": { "*": "allow" }
+      }
+    },
+
+    // ---- 分析子代理（纯分析不决策）----
+    "analyzer": {
+      "description": "分析智能体，纯分析不决策。负责方案对比、依赖追踪、影响评估、架构审计。只读。",
+      "mode": "subagent",
+      "model": "deepseek/deepseek-v4-pro",
+      "color": "#C9B1FF",
+      "temperature": 0.1,
+      "steps": 15,
+      "prompt": "{file:./.opencode/agents/analyzer.md}",
+      "permission": {
+        "edit": "deny",
+        "bash": "deny"
+      }
+    },
+
+    // ---- 代码编写子代理 ----
+    "task-executor": {
+      "description": "任务执行者，按合同规范编写代码。仅修改合同中 files_to_modify 指定的文件。",
+      "mode": "subagent",
+      "model": "deepseek/deepseek-v4-flash",
+      "color": "#45B7D1",
+      "temperature": 0.3,
+      "steps": 50,
+      "prompt": "{file:./.opencode/agents/task-executor.md}",
+      "permission": {
+        "edit": "allow",
+        "bash": "allow"
+      }
+    },
+
+    // ---- 构建子代理 ----
+    "builder": {
+      "description": "构建者，负责执行构建、部署、验证。不改源码。",
+      "mode": "subagent",
+      "model": "deepseek/deepseek-v4-flash",
+      "color": "#96CEB4",
+      "temperature": 0.1,
+      "steps": 25,
+      "prompt": "{file:./.opencode/agents/builder.md}",
+      "permission": {
+        "edit": "deny",
+        "bash": "allow"
+      }
+    },
+
+    // ---- 审查子代理 ----
+    "code-reviewer": {
+      "description": "代码审查者，审查代码质量、安全性和最佳实践。只读。",
+      "mode": "subagent",
+      "model": "deepseek/deepseek-v4-flash",
+      "color": "#DDA0DD",
+      "temperature": 0.1,
+      "steps": 15,
+      "prompt": "{file:./.opencode/agents/code-reviewer.md}",
+      "permission": {
+        "edit": "deny",
+        "bash": "deny"
+      }
+    },
+
+    // ---- 测试子代理 ----
+    "tester": {
+      "description": "统一测试者，负责 E2E 测试、单元测试运行、UI 冒烟测试。不改源码。",
+      "mode": "subagent",
+      "model": "deepseek/deepseek-v4-flash",
+      "color": "#F0B27A",
+      "temperature": 0.2,
+      "steps": 30,
+      "prompt": "{file:./.opencode/agents/tester.md}",
+      "permission": {
+        "edit": "deny",
+        "bash": "allow"
+      }
+    },
+
+    // ---- 复盘子代理（内部，隐藏，不可委派其他子代理）----
+    "retro": {
+      "description": "复盘者，负责任务完成后复盘、约束更新、事故记录。不可委派其他子 Agent。",
+      "mode": "subagent",
+      "hidden": true,
+      "model": "deepseek/deepseek-v4-pro",
+      "color": "#ABEBC6",
+      "temperature": 0.3,
+      "prompt": "{file:./.opencode/agents/retro.md}",
+      "permission": {
+        "edit": {
+          "*": "deny",
+          ".opencode/retros/**": "allow",
+          ".opencode/incidents/**": "allow"
+        },
+        "bash": "allow"
+        // task 继承全局：禁止唤起任何子代理
+      }
+    }
+  },
+
+  // ================================================================
+  // 插件 (Plugins) — OpenCode 框架级钩子
+  // 配置后需重启 OpenCode 生效
+  // ================================================================
+  "plugin": [
+    "./.opencode/plugins/contract-enforcer.ts",
+    "./.opencode/plugins/secret-leak-scan.ts",
+    "./.opencode/plugins/dangerous-command-guard.ts",
+    "@mohak34/opencode-notifier@0.2.5"
+  ],
+
+  // ================================================================
+  // LSP — 代码智能（定义跳转、引用查找、悬停信息）
+  // ================================================================
+  "lsp": true
+}

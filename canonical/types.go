@@ -60,9 +60,13 @@ type AgentDef struct {
 	Tools        []string `json:"tools,omitempty"`
 	SystemPrompt string   `json:"system_prompt"`
 	Color        string   `json:"color,omitempty"`
-	Mode         string   `json:"mode,omitempty"`      // "subagent" | "primary" | "all"
-	Skills       []string `json:"skills,omitempty"`    // names of skills to load
-	MCPServers   []string `json:"mcp_servers,omitempty"` // names of MCP servers
+	Mode         string   `json:"mode,omitempty"`         // "subagent" | "primary" | "all"
+	Hidden       bool     `json:"hidden,omitempty"`       // hide from @ mention menu
+	Temperature  float64  `json:"temperature,omitempty"`  // LLM temperature
+	MaxSteps     int      `json:"max_steps,omitempty"`    // max steps before return
+	Skills       []string `json:"skills,omitempty"`       // names of skills to load
+	MCPServers   []string `json:"mcp_servers,omitempty"`  // names of MCP servers
+	PermissionOverrides *PermissionSet `json:"permission_overrides,omitempty"` // agent-level overrides
 }
 
 // SkillDef represents a packaged skill (SKILL.md + supporting files).
@@ -153,9 +157,10 @@ type SettingsMap struct {
 	DarkMode bool   `json:"dark_mode,omitempty"`
 
 	// Behavior
-	AutoUpdate  bool   `json:"auto_update,omitempty"`
-	AutoCommit  bool   `json:"auto_commit,omitempty"`
-	Personality string `json:"personality,omitempty"` // "friendly" | "pragmatic" | "none"
+	AutoUpdate   bool   `json:"auto_update,omitempty"`
+	AutoCommit   bool   `json:"auto_commit,omitempty"`
+	Personality  string `json:"personality,omitempty"` // "friendly" | "pragmatic" | "none"
+	DefaultAgent string `json:"default_agent,omitempty"` // default primary agent name
 
 	// Web Search
 	WebSearch string `json:"web_search,omitempty"` // "cached" | "live" | "disabled"

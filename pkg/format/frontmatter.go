@@ -7,9 +7,19 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// StripBOM removes a UTF-8 BOM (byte order mark) from the start of content.
+func StripBOM(content string) string {
+	if len(content) >= 3 && content[0] == 0xEF && content[1] == 0xBB && content[2] == 0xBF {
+		return content[3:]
+	}
+	return content
+}
+
 // StripJSONComments removes // line comments from JSON content.
 // This allows reading JSONC (JSON with Comments) files.
+// Also handles UTF-8 BOM removal.
 func StripJSONComments(content string) string {
+	content = StripBOM(content)
 	var result strings.Builder
 	lines := strings.Split(content, "\n")
 	for _, line := range lines {
