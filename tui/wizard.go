@@ -36,6 +36,7 @@ const (
 	WizPortSelectTarget
 	WizPortAspects
 	WizPortDone
+	WizSettings
 )
 
 // WizardModel is the interactive config wizard.
@@ -163,7 +164,7 @@ func (m WizardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 
 		case "up", "k":
-			if m.screen == WizWelcome {
+			if m.screen == WizWelcome || m.screen == WizSettings {
 				if m.langChoice > 0 {
 					m.langChoice--
 				}
@@ -173,7 +174,7 @@ func (m WizardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.cursorIdx--
 			}
 		case "down", "j":
-			if m.screen == WizWelcome {
+			if m.screen == WizWelcome || m.screen == WizSettings {
 				if m.langChoice < 1 {
 					m.langChoice++
 				}
@@ -218,7 +219,7 @@ func (m *WizardModel) canMoveDown() bool {
 	case WizWelcome:
 		return m.cursorIdx < 1 // en, zh
 	case WizMenu:
-		return m.cursorIdx < 2 // Save, Load, Port
+		return m.cursorIdx < 3 // Save, Load, Port, Settings
 	case WizSaveSelectAgent, WizPortSelectSource, WizPortSelectTarget:
 		return m.cursorIdx < len(m.detectResults)-1
 	case WizLoadSelectProfile:
@@ -227,6 +228,8 @@ func (m *WizardModel) canMoveDown() bool {
 		return m.cursorIdx < len(m.detectResults)-1
 	case WizPortAspects:
 		return m.cursorIdx < len(m.aspects)-1
+	case WizSettings:
+		return m.cursorIdx < 1 // en, zh
 	}
 	return false
 }
@@ -268,6 +271,16 @@ func (m *WizardModel) handleEnter() (tea.Model, tea.Cmd) {
 			m.prevScreen = WizMenu
 			m.screen = WizPortSelectSource
 			m.cursorIdx = m.firstFoundIdx()
+		case 3: // Settings
+			m.prevScreen = WizMenu
+			m.screen = WizSettings
+			m.cursorIdx = 0
+			// Preselect current language
+			if i18n.Lang() == "zh" {
+				m.langChoice = 1
+			} else {
+				m.langChoice = 0
+			}
 		}
 		return m, nil
 
@@ -321,6 +334,23 @@ func (m *WizardModel) handleEnter() (tea.Model, tea.Cmd) {
 			m.selectedTarget = f[m.cursorIdx].ID
 			return m, m.executeWizardLoad()
 		}
+		return m, nil
+
+	case WizSettings:
+		// Save language choice and go back to menu
+		lang := "en"
+		if m.langChoice == 1 {
+			lang = "zh"
+		}
+		i18n.SetLang(lang)
+		s, _ := settings.Load()
+		if s != nil {
+			s.Lang = lang
+			s.FirstRun = false
+			settings.Save(s)
+		}
+		m.screen = WizMenu
+		m.cursorIdx = 3
 		return m, nil
 	}
 
@@ -516,6 +546,8 @@ func (m WizardModel) viewCurrentScreen() string {
 		return m.viewProfileSelect()
 	case WizLoadSelectTarget:
 		return m.viewAgentSelect("📥 Load Profile — Select Target", "Which agent do you want to apply this profile to?")
+	case WizSettings:
+		return m.viewSettings()
 	}
 	return ""
 }
@@ -587,6 +619,7 @@ func (m WizardModel) viewMenu() string {
 		"💾 Save — Capture a project's agent config as a reusable profile",
 		"📥 Load — Apply a saved profile to this project",
 		"🔀 Port — Transfer config between two agents in this project",
+		"⚙  Settings — Change language and preferences",
 	}
 
 	for i, item := range items {
@@ -685,6 +718,32 @@ func (m WizardModel) viewProfileSelect() string {
 
 	b.WriteString("\n")
 	b.WriteString(styles.HelpBar.Render("↑↓ navigate • Enter select • esc back"))
+	return b.String()
+}
+
+func (m WizardModel) viewSettings() string {
+	var b strings.Builder
+	b.WriteString(styles.Title.Render("⚙ " + i18n.T("settings.title")))
+	b.WriteString("\n\n")
+	b.WriteString(i18n.T("settings.language"))
+	b.WriteString("\n\n")
+
+	langs := []string{"English", "简体中文"}
+	for i, name := range langs {
+		prefix := "  "
+		if i == m.langChoice {
+			prefix = "❯ "
+			b.WriteString(styles.ActiveItem.Render(prefix + name))
+		} else {
+			b.WriteString(styles.InactiveItem.Render(prefix + name))
+		}
+		b.WriteString("\n")
+	}
+
+	b.WriteString("\n")
+	b.WriteString(styles.MutedText.Render(i18n.T("settings.restart_hint")))
+	b.WriteString("\n\n")
+	b.WriteString(styles.HelpBar.Render(i18n.T("help.navigate") + " • Enter " + i18n.T("help.select") + " • Esc " + i18n.T("help.back")))
 	return b.String()
 }
 
