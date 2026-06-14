@@ -160,19 +160,23 @@ func (p Profile) Summary() string {
 }
 
 func sanitizeName(name string) string {
-	// Replace spaces and special chars with hyphens
 	name = strings.ToLower(name)
-	name = strings.Map(func(r rune) rune {
-		if (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') || r == '-' || r == '_' {
-			return r
+	var b strings.Builder
+	lastHyphen := false
+	for _, r := range name {
+		if (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') || r == '_' {
+			b.WriteRune(r)
+			lastHyphen = false
+		} else if r == ' ' || r == '-' {
+			if !lastHyphen {
+				b.WriteRune('-')
+				lastHyphen = true
+			}
 		}
-		if r == ' ' {
-			return '-'
-		}
-		return -1
-	}, name)
-	if name == "" {
-		name = "unnamed"
 	}
-	return name
+	result := strings.Trim(b.String(), "-")
+	if result == "" {
+		result = "unnamed"
+	}
+	return result
 }

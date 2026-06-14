@@ -11,6 +11,7 @@ import (
 	"github.com/moximxxx/shifter/adapter"
 	"github.com/moximxxx/shifter/canonical"
 	"github.com/moximxxx/shifter/pkg/format"
+	"gopkg.in/yaml.v3"
 )
 
 type Adapter struct{}
@@ -369,30 +370,28 @@ func readQoderSkillDir(dir string) (canonical.SkillDef, error) {
 }
 
 func formatQoderAgentFile(agent canonical.AgentDef) string {
-	var b strings.Builder
-	b.WriteString("---\n")
-	b.WriteString(fmt.Sprintf("name: %s\n", agent.Name))
+	fm := make(map[string]interface{})
+	fm["name"] = agent.Name
 	if agent.Description != "" {
-		b.WriteString(fmt.Sprintf("description: %s\n", agent.Description))
+		fm["description"] = agent.Description
 	}
 	if len(agent.Tools) > 0 {
-		b.WriteString(fmt.Sprintf("tools: %s\n", strings.Join(agent.Tools, ", ")))
+		fm["tools"] = strings.Join(agent.Tools, ", ")
 	}
 	if agent.Model != "" {
-		b.WriteString(fmt.Sprintf("model: %s\n", agent.Model))
+		fm["model"] = agent.Model
 	}
 	if len(agent.Skills) > 0 {
-		b.WriteString("skills:\n")
-		for _, s := range agent.Skills {
-			b.WriteString(fmt.Sprintf("  - {skillName: %s}\n", s))
-		}
+		fm["skills"] = agent.Skills
 	}
 	if len(agent.MCPServers) > 0 {
-		b.WriteString("mcpServers:\n")
-		for _, m := range agent.MCPServers {
-			b.WriteString(fmt.Sprintf("  - {%s}\n", m))
-		}
+		fm["mcpServers"] = agent.MCPServers
 	}
+
+	fmBytes, _ := yaml.Marshal(fm)
+	var b strings.Builder
+	b.WriteString("---\n")
+	b.WriteString(string(fmBytes))
 	b.WriteString("---\n\n")
 	b.WriteString(agent.SystemPrompt)
 	if !strings.HasSuffix(agent.SystemPrompt, "\n") {

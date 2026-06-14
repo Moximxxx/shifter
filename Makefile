@@ -18,9 +18,18 @@ build:
 test:
 	go test ./... -v
 
+# Run tests with coverage
+test-cover:
+	go test ./... -coverprofile=coverage.out -covermode=atomic
+	go tool cover -func=coverage.out
+
 # Run tests with race detection
 test-race:
 	go test ./... -race -v
+
+# Run E2E tests
+test-e2e:
+	go test ./test/e2e/... -v
 
 # Lint the codebase
 lint:
