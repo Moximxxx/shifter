@@ -1,13 +1,20 @@
 # 🔄 Shifter
 
-[📖 English](README.md) | [📋 操作手册](MANUAL.zh-CN.md)
+[📖 English](README.md) · [📋 操作手册](MANUAL.zh-CN.md)
 
-**一键在不同 Coding Agent 之间迁移配置。** 配置一次，到处使用。
+<p align="center">
+  <strong>一键在不同 Coding Agent 之间迁移配置。</strong><br>
+  配置一次 agents、skills、MCP、hooks，在 Claude Code、Codex、OpenCode、Qoder 中通用。
+</p>
 
-```bash
-shifter port claude-code --to codex       # 一行搞定
-shifter ui                                # 交互式向导
-```
+<p align="center">
+  <img src="https://img.shields.io/badge/version-0.1.0-7C3AED?style=flat-square" alt="version">
+  <img src="https://img.shields.io/badge/go-1.24%2B-00ADD8?style=flat-square&logo=go" alt="go">
+  <img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="license">
+  <img src="https://img.shields.io/badge/agents-7-10B981?style=flat-square" alt="agents">
+</p>
+
+---
 
 ## 安装
 
@@ -15,87 +22,128 @@ shifter ui                                # 交互式向导
 curl -fsSL https://raw.githubusercontent.com/Moximxxx/shifter/main/install.sh | sh
 ```
 
-## 支持的 Agent
-
-| Agent | 子代理 | 技能 | 命令 | MCP | 权限 | 钩子 |
-|-------|:---:|:---:|:---:|:---:|:---:|:---:|
-| **Claude Code** | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| **Codex CLI** | ✓ | ✓ | 嵌入 | ✓ | ✓ | ✓ |
-| **OpenCode** | ✓ | ✓ | ✓ | ✓ | ✓ | — |
-| **Qoder** | ✓ | ✓ | — | ✓ | — | — |
-| **Gemini CLI** | — | — | — | ✓ | ✓ | — |
-| **Cline** | 嵌入 | — | — | — | — | — |
-| **Aider** | — | — | — | — | ✓ | — |
-
-> `—` = 原生不支持; `嵌入` = 以项目指令形式嵌入  
-> 📖 完整文档见 **[中文操作手册 (MANUAL.zh-CN.md)](MANUAL.zh-CN.md)**
-
 ## 快速上手
 
 ```bash
 shifter detect                              # 扫描已配置的 Agent
 shifter port claude-code --to codex         # 迁移配置
-shifter port --dry-run                      # 预览变更 (配合环境变量)
 shifter ui                                  # 交互式向导
 ```
 
-### 环境变量（可选）
+配合环境变量，连参数都不用写：
 
 ```bash
-eval "$(shifter env init)"
 export SHIFTER_SOURCE=claude-code
 export SHIFTER_TARGET=codex
-shifter port          # 无需参数
+shifter port        # 成了
 ```
 
-## 命令一览
-
-| 命令 | 用途 |
-|------|------|
-| `shifter port <源> --to <目标>` | 单向配置迁移 |
-| `shifter export <agent>` | 导出为私有 JSON 格式 |
-| `shifter import <文件> --to <agent>` | 从私有格式导入 |
-| `shifter sync <A> <B>` | 双向同步 |
-| `shifter save <名称> --source <A>` | 保存为全局模板 |
-| `shifter load <名称> --to <B>` | 加载全局模板 |
-| `shifter detect` | 扫描已配置的 Agent |
-| `shifter status` | 查看项目 Agent 状态 |
-| `shifter backup <agent>` | 备份/恢复 |
-| `shifter env` | 环境变量配置 |
-| `shifter ui` / `shifter wizard` | 交互式向导 |
-
-## 核心概念
+## 工作原理
 
 ```
-源 Agent ──Read──▶ 私有格式 JSON ──Write──▶ 目标 Agent
-(Claude Code)      (Canonical)            (Codex/OpenCode/Qoder)
+┌──────────────┐       ┌──────────────────┐       ┌──────────────┐
+│ Claude Code  │  Read │  私有格式 JSON    │ Write │  Codex CLI   │
+│  .claude/    │ ────▶ │  (Canonical)     │ ────▶ │  .codex/     │
+└──────────────┘       └──────────────────┘       └──────────────┘
 ```
 
-- **语义映射**：理解配置含义，不只是格式转换
-- **损失追踪**：不能完美迁移的功能生成明确警告
-- **自动备份**：每次写入创建带时间戳的备份，随时可撤销
-- **安全写入**：写入前验证语法，绝不写出损坏的配置
+读取原生配置 → 转为通用中间格式 → 写入任意目标 Agent。语义映射处理格式差异；不能完美迁移的功能生成明确警告 — 绝不悄悄丢失。
 
-## 项目结构
+## 功能
+
+|     | 功能 | 说明 |
+|:---:|------|------|
+| 🔀 | **Port** | Agent 间迁移：`shifter port claude-code --to codex --aspects agents,mcp` |
+| 💾 | **Profiles** | 保存/加载可复用模板：`shifter save team-setup --source claude-code` |
+| 📤 | **Export/Import** | 私有 JSON 可移植格式：`shifter export claude-code \| shifter import - --to codex` |
+| 🔄 | **Sync** | 双向同步 + 合并策略：`shifter sync claude-code codex --strategy newer` |
+| 🎨 | **TUI 向导** | 交互式引导流程：`shifter ui` |
+| ⚠️ | **损失追踪** | 不兼容功能生成明确严重级别警告 |
+| 💾 | **自动备份** | 每次写入创建带时间戳的 tar.gz — 随时撤销 |
+
+## 支持的 Agent
+
+| Agent | 子代理 | 技能 | MCP | 钩子 | 格式 |
+|-------|:---:|:---:|:---:|:---:|--------|
+| **Claude Code** | ✓ | ✓ | ✓ | ✓ | JSON + MD |
+| **Codex CLI** | ✓ | ✓ | ✓ | ✓ | TOML |
+| **OpenCode** | ✓ | ✓ | ✓ | — | JSONC |
+| **Qoder** | ✓ | ✓ | ✓ | — | MD frontmatter |
+| **Gemini CLI** | — | — | ✓ | — | JSON |
+| **Cline** | 嵌入 | — | — | — | Markdown |
+| **Aider** | — | — | — | — | YAML |
+
+> `嵌入` = 内容以指令形式保留。完整能力矩阵见 [操作手册](MANUAL.zh-CN.md)。
+
+## 命令
+
+```bash
+shifter port      <源> --to <目标>    # 单向配置迁移
+shifter export    <agent>             # 导出为私有 JSON 格式
+shifter import    <文件> --to <目标>  # 从私有格式导入
+shifter sync      <A> <B>             # 双向同步
+shifter save      <名称> --source <A> # 保存为全局模板
+shifter load      <名称> --to <B>     # 加载模板
+shifter detect                        # 扫描已配置的 Agent
+shifter status                        # 查看项目状态
+shifter backup    <Agent>             # 创建/恢复备份
+shifter profiles                      # 管理模板
+shifter env                           # 显示环境配置
+shifter ui                            # 交互式 TUI 向导
+```
+
+## 架构
 
 ```
-shifter/
-├── adapter/          # Agent 适配器（7 种，解析中心）
-├── canonical/        # 通用配置模型（私有格式）
-├── engine/           # 核心引擎（port/sync/detect/backup/profile）
-├── registry/         # 适配器工厂（添加新 Agent 只需注册）
-├── tui/              # Bubble Tea 交互式终端界面
-├── cmd/              # CLI 命令（cobra）
-├── pkg/              # 工具库（env/format/paths）
-├── test/             # 全部 7 个 Agent 的真实工作流测试固件
-├── dist/             # Release 二进制
-└── install.sh        # 一键安装脚本
+adapter/           ═══════════ 解析中心 ═══════════
+├── claudecode/    Read  .claude/*              → canonical
+├── codex/         Read  .codex/config.toml      → canonical
+├── opencode/      Read  opencode.jsonc          → canonical
+├── qoder/         Read  .qoder/*                → canonical
+├── gemini/        Read  .gemini/settings.json   → canonical
+├── cline/         Read  .clinerules/*           → canonical
+└── aider/         Read  .aider.conf.yml         → canonical
+
+canonical/types.go ═══════ 私有格式 ═══════
+                   通用 JSON 超集，覆盖所有 Agent
+
+registry/          ═══════ 适配器工厂 ═══════
+                   Get("codex") → Write(canonical) → .codex/config.toml
+
+engine/            ═══════ 业务引擎 ═══════
+├── port/          Source → Canonical → Target 流水线
+├── sync/          双向合并引擎
+├── detect/        并发文件系统扫描
+├── backup/        带时间戳的 tar.gz 备份/恢复
+└── profile/       ~/.shifter/profiles/ 管理
 ```
 
-## 📖 完整文档
+添加新 Agent：实现 `AgentAdapter`（Read + Write），注册到 `registry/`，完成。
 
-**[中文操作手册 (MANUAL.zh-CN.md)](MANUAL.zh-CN.md)**
+## 环境变量
 
-## 许可
+```bash
+eval "$(shifter env init)"    # 生成 shell 配置
 
-MIT
+SHIFTER_SOURCE=claude-code    # 默认源 Agent
+SHIFTER_TARGET=codex          # 默认目标 Agent
+SHIFTER_DRY_RUN=1             # 始终先预览
+SHIFTER_ASPECTS=agents,mcp    # 默认迁移维度
+```
+
+[完整环境变量参考 →](MANUAL.zh-CN.md)
+
+## 开发
+
+```bash
+make build          # 编译（含版本信息）
+make test           # 运行测试
+make check          # fmt + vet + test + build
+make release        # 全平台交叉编译
+```
+
+---
+
+<p align="center">
+  <sub>MIT · <a href="https://github.com/Moximxxx/shifter">GitHub</a> · <a href="https://github.com/Moximxxx/shifter/releases">Releases</a></sub>
+</p>
