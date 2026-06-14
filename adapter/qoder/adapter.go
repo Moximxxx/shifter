@@ -2,6 +2,7 @@ package qoder
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -38,6 +39,7 @@ func (a *Adapter) Capabilities() canonical.CapabilityMatrix {
 			"commands":     "Qoder has no slash command system",
 			"permissions":  "Qoder controls permissions via agent tool whitelists",
 			"hooks":        "Qoder has no hook system",
+			"mcp":          "MCP servers stored in .qoder/mcp.json",
 		},
 	}
 }
@@ -150,6 +152,29 @@ func (a *Adapter) Read(ctx context.Context, opts adapter.ReadOptions) (*canonica
 		}
 	}
 
+	// Read MCP servers from .qoder/mcp.json
+	mcpPath := filepath.Join(qoderDir, "mcp.json")
+	if data, err := os.ReadFile(mcpPath); err == nil {
+		var mcpConfig map[string]struct {
+			Command string            `json:"command"`
+			Args    []string          `json:"args"`
+			Env     map[string]string `json:"env"`
+		}
+		if json.Unmarshal(data, &mcpConfig) == nil {
+			for name, srv := range mcpConfig {
+				cfg.MCPServers = append(cfg.MCPServers, canonical.MCPServerDef{
+					Name:    name,
+					Type:    "stdio",
+					Command: srv.Command,
+					Args:    srv.Args,
+					Env:     srv.Env,
+					Enabled: true,
+				})
+			}
+			cfg.Meta.SourcePaths = append(cfg.Meta.SourcePaths, mcpPath)
+		}
+	}
+
 	return cfg, nil
 }
 
@@ -204,6 +229,28 @@ func (a *Adapter) Write(ctx context.Context, cfg *canonical.ShifterConfig, opts 
 			}
 			result.FilesWritten = append(result.FilesWritten, skillPath)
 		}
+	}
+
+	// Write MCP servers to .qoder/mcp.json
+	if len(cfg.MCPServers) > 0 {
+		mcpConfig := make(map[string]struct {
+			Command string            `json:"command"`
+			Args    []string          `json:"args"`
+			Env     map[string]string `json:"env,omitempty"`
+		})
+		for _, mcp := range cfg.MCPServers {
+			mcpConfig[mcp.Name] = struct {
+				Command string            `json:"command"`
+				Args    []string          `json:"args"`
+				Env     map[string]string `json:"env,omitempty"`
+			}{Command: mcp.Command, Args: mcp.Args, Env: mcp.Env}
+		}
+		mcpPath := filepath.Join(qoderDir, "mcp.json")
+		if !opts.DryRun {
+			data, _ := json.MarshalIndent(mcpConfig, "", "  ")
+			os.WriteFile(mcpPath, data, 0644)
+		}
+		result.FilesWritten = append(result.FilesWritten, mcpPath)
 	}
 
 	// Loss warnings

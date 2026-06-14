@@ -233,10 +233,13 @@ func (a *Adapter) Write(ctx context.Context, cfg *canonical.ShifterConfig, opts 
 			codexMDPath := filepath.Join(codexDir, "codex.md")
 			content := inst.Content
 
-			// If the source agent has commands and Codex doesn't support them natively,
-			// embed them in the instructions
+			// Embed commands (not natively supported)
 			if len(cfg.Commands) > 0 {
 				content += a.embedCommands(cfg.Commands)
+			}
+			// Embed skills (not natively supported — preserve content)
+			if len(cfg.Skills) > 0 {
+				content += a.embedSkills(cfg.Skills)
 			}
 
 			if !opts.DryRun {
@@ -466,5 +469,25 @@ func (a *Adapter) embedCommands(commands []canonical.CommandDef) string {
 		b.WriteString("\n\n---\n\n")
 	}
 
+	return b.String()
+}
+
+// embedSkills formats skill definitions as markdown sections embedded in codex.md.
+func (a *Adapter) embedSkills(skills []canonical.SkillDef) string {
+	if len(skills) == 0 {
+		return ""
+	}
+	var b strings.Builder
+	b.WriteString("\n\n---\n\n## Custom Skills (ported from another agent)\n\n")
+	b.WriteString("> **Note:** Codex CLI has experimental skill support (features.skills=true). ")
+	b.WriteString("Skills listed below can be installed to `~/.codex/skills/`.\n\n")
+	for _, skill := range skills {
+		b.WriteString(fmt.Sprintf("### %s\n\n", skill.Name))
+		if skill.Description != "" {
+			b.WriteString(fmt.Sprintf("*%s*\n\n", skill.Description))
+		}
+		b.WriteString(skill.Markdown)
+		b.WriteString("\n\n---\n\n")
+	}
 	return b.String()
 }
