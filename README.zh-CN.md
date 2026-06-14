@@ -19,7 +19,7 @@
 ## 安装
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Moximxxx/shifter/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/Moximxxx/shifter/release/install.sh | sh
 ```
 
 ## 快速上手

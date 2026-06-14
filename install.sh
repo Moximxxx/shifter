@@ -4,10 +4,10 @@
 # Version: 0.1.0
 #
 # One-liner installation:
-#   curl -fsSL https://raw.githubusercontent.com/Moximxxx/shifter/main/install.sh | sh
+#   curl -fsSL https://raw.githubusercontent.com/Moximxxx/shifter/release/install.sh | sh
 #
 # Or with a specific version:
-#   curl -fsSL https://raw.githubusercontent.com/Moximxxx/shifter/main/install.sh | VERSION=0.1.0 sh
+#   curl -fsSL https://raw.githubusercontent.com/Moximxxx/shifter/release/install.sh | VERSION=0.1.0 sh
 # ============================================================================
 
 set -e
