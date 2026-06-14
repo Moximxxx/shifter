@@ -21,13 +21,13 @@ BINARY="shifter"
 
 # Colors
 RED='\033[0;31m'
-GREEN='\033[0;35m'
+GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 MAGENTA='\033[0;35m'
 NC='\033[0m'
 
 # --- Helpers ---
-info()    { printf "${MAGENTA}→ %s${NC}\n" "$1"; }
+info()    { printf "→ %s\n" "$1"; }
 success() { printf "${GREEN}✓ %s${NC}\n" "$1"; }
 warn()    { printf "${YELLOW}⚠ %s${NC}\n" "$1"; }
 error()   { printf "${RED}✗ %s${NC}\n" "$1"; exit 1; }
@@ -129,7 +129,7 @@ SHIFTER_LOGO
 
     # Verify
     if command -v "$BINARY" >/dev/null 2>&1; then
-        printf "${MAGENTA}✓${NC} Installed version:\n"
+        printf "${GREEN}✓${NC} Installed version:\n"
         "$BINARY" --version 2>/dev/null || true
     else
         warn "Binary installed but not in PATH"
