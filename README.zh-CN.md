@@ -40,21 +40,19 @@ shifter port        # 成了
 
 ## 工作原理
 
-```
-  Claude Code              Canonical (JSON)          Codex CLI
-  .claude/                 private format            .codex/
-      |                          |                       |
-      |-- adapter.Read() ------>|                        |
-      |   agents, skills,       |                        |
-      |   mcp, hooks, perms     |                        |
-      |                         |-- adapter.Write() ---->|
-      |                         |    agents  -> [agents] |
-      |                         |    skills -> codex.md  |
-      |                         |    mcp    -> mcp_serv  |
-      |                         |    hooks  -> [[hooks]] |
+```mermaid
+flowchart LR
+    A[Claude Code<br>.claude/] -->|Read| B[(Shifter Canonical<br>JSON)]
+    C[OpenCode<br>opencode.jsonc] -->|Read| B
+    D[Qoder<br>.qoder/] -->|Read| B
+    E[... 7 agents] -->|Read| B
+    B -->|Write| F[Codex CLI<br>.codex/]
+    B -->|Write| G[OpenCode<br>opencode.jsonc]
+    B -->|Write| H[Qoder<br>.qoder/]
+    B -->|Write| I[... any target]
 ```
 
-读取原生配置 → 通用 JSON → 写入目标 Agent。语义映射处理格式差异，不能迁移的功能生成明确警告。
+读取原生配置 → 通用 JSON 中间格式 → 写入任意目标 Agent。语义映射处理格式差异，不能迁移的功能生成明确警告。
 
 ## 功能
 
@@ -101,28 +99,38 @@ shifter ui                            # 交互式 TUI 向导
 
 ## 架构
 
-```
-adapter/           ═══════════ 解析中心 ═══════════
-  - claudecode/    Read  .claude/*              → canonical
-  - codex/         Read  .codex/config.toml      → canonical
-  - opencode/      Read  opencode.jsonc          → canonical
-  - qoder/         Read  .qoder/*                → canonical
-  - gemini/        Read  .gemini/settings.json   → canonical
-  - cline/         Read  .clinerules/*           → canonical
-  - aider/         Read  .aider.conf.yml         → canonical
+```mermaid
+flowchart TB
+    subgraph Parsing[解析中心]
+        CC[Claude Code<br>.claude/]
+        CX[Codex CLI<br>.codex/]
+        OC[OpenCode<br>opencode.jsonc]
+        QD[Qoder<br>.qoder/]
+    end
 
-canonical/types.go ═══════ 私有格式 ═══════
-                   通用 JSON 超集，覆盖所有 Agent
+    subgraph Core[Shifter 核心]
+        CAN[(Canonical JSON<br>私有格式)]
+        REG[适配器工厂<br>registry/]
+        ENG[业务引擎<br>port/sync/detect/backup]
+    end
 
-registry/          ═══════ 适配器工厂 ═══════
-                   Get("codex") → Write(canonical) → .codex/config.toml
+    subgraph Target[目标 Agent]
+        TCX[Codex CLI]
+        TOC[OpenCode]
+        TQD[Qoder]
+        TCC[Claude Code]
+    end
 
-engine/            ═══════ 业务引擎 ═══════
-  - port/          Source → Canonical → Target 流水线
-  - sync/          双向合并引擎
-  - detect/        并发文件系统扫描
-  - backup/        带时间戳的 tar.gz 备份/恢复
-  - profile/       ~/.shifter/profiles/ 管理
+    CC -->|Read| CAN
+    CX -->|Read| CAN
+    OC -->|Read| CAN
+    QD -->|Read| CAN
+    CAN --> REG
+    REG -->|Write| TCX
+    REG -->|Write| TOC
+    REG -->|Write| TQD
+    REG -->|Write| TCC
+    ENG --> CAN
 ```
 
 添加新 Agent：实现 `AgentAdapter`（Read + Write），注册到 `registry/`，完成。

@@ -40,21 +40,19 @@ shifter port        # that's it
 
 ## What It Does
 
-```
-  Claude Code              Canonical (JSON)          Codex CLI
-  .claude/                 private format            .codex/
-      |                          |                       |
-      |-- adapter.Read() ------>|                        |
-      |   agents, skills,       |                        |
-      |   mcp, hooks, perms     |                        |
-      |                         |-- adapter.Write() ---->|
-      |                         |    agents  -> [agents] |
-      |                         |    skills -> codex.md  |
-      |                         |    mcp    -> mcp_serv  |
-      |                         |    hooks  -> [[hooks]] |
+```mermaid
+flowchart LR
+    A[Claude Code<br>.claude/] -->|Read| B[(Shifter Canonical<br>JSON)]
+    C[OpenCode<br>opencode.jsonc] -->|Read| B
+    D[Qoder<br>.qoder/] -->|Read| B
+    E[... 7 agents] -->|Read| B
+    B -->|Write| F[Codex CLI<br>.codex/]
+    B -->|Write| G[OpenCode<br>opencode.jsonc]
+    B -->|Write| H[Qoder<br>.qoder/]
+    B -->|Write| I[... any target]
 ```
 
-Read native config → universal JSON → write target agent. Semantic mapping handles format gaps; lossy conversions generate clear warnings.
+Read native config → universal canonical JSON → write to any target agent. Semantic mapping handles format gaps; incompatible features generate clear severity-leveled warnings.
 
 ## Features
 
@@ -101,28 +99,38 @@ shifter ui                            # interactive TUI wizard
 
 ## Architecture
 
-```
-adapter/           ═══════════ Parsing Center ═══════════
-  - claudecode/    Read  .claude/*              → canonical
-  - codex/         Read  .codex/config.toml      → canonical
-  - opencode/      Read  opencode.jsonc          → canonical
-  - qoder/         Read  .qoder/*                → canonical
-  - gemini/        Read  .gemini/settings.json   → canonical
-  - cline/         Read  .clinerules/*           → canonical
-  - aider/         Read  .aider.conf.yml         → canonical
+```mermaid
+flowchart TB
+    subgraph Parsing[Parsing Center]
+        CC[Claude Code<br>.claude/]
+        CX[Codex CLI<br>.codex/]
+        OC[OpenCode<br>opencode.jsonc]
+        QD[Qoder<br>.qoder/]
+    end
 
-canonical/types.go ═══════ Private Format ═══════
-                   Universal JSON superset of all agents
+    subgraph Core[Shifter Core]
+        CAN[(Canonical JSON<br>Private Format)]
+        REG[Adapter Factory<br>registry/]
+        ENG[Business Engines<br>port/sync/detect/backup]
+    end
 
-registry/          ═══════ Adapter Factory ═══════
-                   Get("codex") → Write(canonical) → .codex/config.toml
+    subgraph Target[Target Agents]
+        TCX[Codex CLI]
+        TOC[OpenCode]
+        TQD[Qoder]
+        TCC[Claude Code]
+    end
 
-engine/            ═══════ Business Logic ═══════
-  - port/          Source → Canonical → Target pipeline
-  - sync/          Bidirectional merge engine
-  - detect/        Concurrent filesystem scanner
-  - backup/        Timestamped tar.gz backup/restore
-  - profile/       ~/.shifter/profiles/ management
+    CC -->|Read| CAN
+    CX -->|Read| CAN
+    OC -->|Read| CAN
+    QD -->|Read| CAN
+    CAN --> REG
+    REG -->|Write| TCX
+    REG -->|Write| TOC
+    REG -->|Write| TQD
+    REG -->|Write| TCC
+    ENG --> CAN
 ```
 
 Adding a new agent: implement `AgentAdapter` (Read + Write), register in `registry/`, done.
