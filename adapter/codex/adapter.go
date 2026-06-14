@@ -17,6 +17,7 @@ import (
 
 	"github.com/moximxxx/shifter/adapter"
 	"github.com/moximxxx/shifter/canonical"
+	"github.com/moximxxx/shifter/pkg/paths"
 )
 
 // Adapter implements adapter.AgentAdapter for Codex CLI.
@@ -31,7 +32,7 @@ func (a *Adapter) ID() string   { return "codex" }
 func (a *Adapter) Name() string { return "Codex CLI" }
 
 func (a *Adapter) SearchPaths() []string {
-	home, _ := os.UserHomeDir()
+	home := paths.MustHomeDir()
 	return []string{
 		filepath.Join(home, ".codex"),
 		".codex",
@@ -111,7 +112,7 @@ func (a *Adapter) Detect() (adapter.DetectionResult, error) {
 		Summary: make(map[string]int),
 	}
 
-	home, _ := os.UserHomeDir()
+	home := paths.MustHomeDir()
 	candidates := []string{
 		filepath.Join(home, ".codex"),
 		".codex",
@@ -153,14 +154,14 @@ func (a *Adapter) Read(ctx context.Context, opts adapter.ReadOptions) (*canonica
 	var codexDir string
 	switch opts.Scope {
 	case "global":
-		home, _ := os.UserHomeDir()
+		home := paths.MustHomeDir()
 		codexDir = filepath.Join(home, ".codex")
 	case "project":
 		codexDir = filepath.Join(opts.ProjectRoot, ".codex")
 	default:
 		codexDir = filepath.Join(opts.ProjectRoot, ".codex")
 		if _, err := os.Stat(codexDir); os.IsNotExist(err) {
-			home, _ := os.UserHomeDir()
+			home := paths.MustHomeDir()
 			codexDir = filepath.Join(home, ".codex")
 		}
 	}
@@ -203,7 +204,7 @@ func (a *Adapter) Write(ctx context.Context, cfg *canonical.ShifterConfig, opts 
 	var codexDir string
 	switch opts.Scope {
 	case "global":
-		home, _ := os.UserHomeDir()
+		home := paths.MustHomeDir()
 		codexDir = filepath.Join(home, ".codex")
 	default:
 		codexDir = filepath.Join(opts.ProjectRoot, ".codex")

@@ -8,6 +8,7 @@ import (
 
 	"github.com/moximxxx/shifter/adapter"
 	"github.com/moximxxx/shifter/canonical"
+	"github.com/moximxxx/shifter/pkg/paths"
 )
 
 type Adapter struct{}
@@ -18,7 +19,7 @@ func (a *Adapter) ID() string   { return "gemini-cli" }
 func (a *Adapter) Name() string { return "Gemini CLI" }
 
 func (a *Adapter) SearchPaths() []string {
-	home, _ := os.UserHomeDir()
+	home := paths.MustHomeDir()
 	return []string{
 		filepath.Join(home, ".gemini"),
 		".gemini",
@@ -89,7 +90,7 @@ func (a *Adapter) Detect() (adapter.DetectionResult, error) {
 	result := adapter.DetectionResult{
 		Summary: make(map[string]int),
 	}
-	home, _ := os.UserHomeDir()
+	home := paths.MustHomeDir()
 	candidates := []string{
 		filepath.Join(home, ".gemini"),
 		".gemini",
@@ -122,7 +123,7 @@ func (a *Adapter) Read(ctx context.Context, opts adapter.ReadOptions) (*canonica
 	var geminiDir string
 	switch opts.Scope {
 	case "global":
-		home, _ := os.UserHomeDir()
+		home := paths.MustHomeDir()
 		geminiDir = filepath.Join(home, ".gemini")
 	default:
 		geminiDir = filepath.Join(opts.ProjectRoot, ".gemini")
@@ -309,7 +310,7 @@ func (a *Adapter) Write(ctx context.Context, cfg *canonical.ShifterConfig, opts 
 	var geminiDir string
 	switch opts.Scope {
 	case "global":
-		home, _ := os.UserHomeDir()
+		home := paths.MustHomeDir()
 		geminiDir = filepath.Join(home, ".gemini")
 	default:
 		geminiDir = filepath.Join(opts.ProjectRoot, ".gemini")

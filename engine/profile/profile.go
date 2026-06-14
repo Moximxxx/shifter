@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/moximxxx/shifter/canonical"
+	"github.com/moximxxx/shifter/pkg/paths"
 )
 
 const profilesDir = ".shifter/profiles"
@@ -31,12 +32,8 @@ type Profile struct {
 
 // Save saves a profile to ~/.shifter/profiles/<name>.json.
 func Save(p Profile) error {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return fmt.Errorf("home dir: %w", err)
-	}
-
-	dir := filepath.Join(home, profilesDir)
+	home := paths.MustHomeDir()
+dir := filepath.Join(home, profilesDir)
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		return fmt.Errorf("create profiles dir: %w", err)
 	}
@@ -59,12 +56,8 @@ func Save(p Profile) error {
 
 // Load loads a profile by name from ~/.shifter/profiles/.
 func Load(name string) (*Profile, error) {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return nil, fmt.Errorf("home dir: %w", err)
-	}
-
-	path := filepath.Join(home, profilesDir, sanitizeName(name)+".json")
+	home := paths.MustHomeDir()
+path := filepath.Join(home, profilesDir, sanitizeName(name)+".json")
 	data, err := os.ReadFile(path)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -83,12 +76,8 @@ func Load(name string) (*Profile, error) {
 
 // List returns all saved profiles sorted by update time (newest first).
 func List() ([]Profile, error) {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return nil, err
-	}
-
-	dir := filepath.Join(home, profilesDir)
+	home := paths.MustHomeDir()
+dir := filepath.Join(home, profilesDir)
 	entries, err := os.ReadDir(dir)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -123,11 +112,8 @@ func List() ([]Profile, error) {
 
 // Delete removes a profile by name.
 func Delete(name string) error {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return err
-	}
-	path := filepath.Join(home, profilesDir, sanitizeName(name)+".json")
+	home := paths.MustHomeDir()
+path := filepath.Join(home, profilesDir, sanitizeName(name)+".json")
 	return os.Remove(path)
 }
 

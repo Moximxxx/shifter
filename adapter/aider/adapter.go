@@ -9,6 +9,7 @@ import (
 
 	"github.com/moximxxx/shifter/adapter"
 	"github.com/moximxxx/shifter/canonical"
+	"github.com/moximxxx/shifter/pkg/paths"
 )
 
 type Adapter struct{}
@@ -19,7 +20,7 @@ func (a *Adapter) ID() string   { return "aider" }
 func (a *Adapter) Name() string { return "Aider" }
 
 func (a *Adapter) SearchPaths() []string {
-	home, _ := os.UserHomeDir()
+	home := paths.MustHomeDir()
 	return []string{
 		filepath.Join(home, ".aider.conf.yml"),
 		".aider.conf.yml",
@@ -67,7 +68,7 @@ func (a *Adapter) Detect() (adapter.DetectionResult, error) {
 	result := adapter.DetectionResult{
 		Summary: make(map[string]int),
 	}
-	home, _ := os.UserHomeDir()
+	home := paths.MustHomeDir()
 	candidates := []string{
 		filepath.Join(home, ".aider.conf.yml"),
 		".aider.conf.yml",
@@ -97,7 +98,7 @@ func (a *Adapter) Read(ctx context.Context, opts adapter.ReadOptions) (*canonica
 	var configPath string
 	switch opts.Scope {
 	case "global":
-		home, _ := os.UserHomeDir()
+		home := paths.MustHomeDir()
 		configPath = filepath.Join(home, ".aider.conf.yml")
 	default:
 		configPath = filepath.Join(opts.ProjectRoot, ".aider.conf.yml")
@@ -236,7 +237,7 @@ func (a *Adapter) Write(ctx context.Context, cfg *canonical.ShifterConfig, opts 
 	var configPath string
 	switch opts.Scope {
 	case "global":
-		home, _ := os.UserHomeDir()
+		home := paths.MustHomeDir()
 		configPath = filepath.Join(home, ".aider.conf.yml")
 	default:
 		configPath = filepath.Join(opts.ProjectRoot, ".aider.conf.yml")

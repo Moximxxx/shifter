@@ -19,6 +19,7 @@ import (
 	"github.com/moximxxx/shifter/adapter"
 	"github.com/moximxxx/shifter/canonical"
 	"github.com/moximxxx/shifter/pkg/format"
+	"github.com/moximxxx/shifter/pkg/paths"
 )
 
 // Adapter implements adapter.AgentAdapter for Claude Code.
@@ -33,7 +34,7 @@ func (a *Adapter) ID() string   { return "claude-code" }
 func (a *Adapter) Name() string { return "Claude Code" }
 
 func (a *Adapter) SearchPaths() []string {
-	home, _ := os.UserHomeDir()
+	home := paths.MustHomeDir()
 	return []string{
 		filepath.Join(home, ".claude"),
 		".claude",
@@ -104,7 +105,7 @@ func (a *Adapter) Detect() (adapter.DetectionResult, error) {
 		Summary: make(map[string]int),
 	}
 
-	home, _ := os.UserHomeDir()
+	home := paths.MustHomeDir()
 	candidates := []string{
 		filepath.Join(home, ".claude"),
 		".claude",
@@ -181,7 +182,7 @@ func (a *Adapter) Read(ctx context.Context, opts adapter.ReadOptions) (*canonica
 	var claudeDir string
 	switch opts.Scope {
 	case "global":
-		home, _ := os.UserHomeDir()
+		home := paths.MustHomeDir()
 		claudeDir = filepath.Join(home, ".claude")
 	case "project":
 		claudeDir = filepath.Join(opts.ProjectRoot, ".claude")
@@ -189,7 +190,7 @@ func (a *Adapter) Read(ctx context.Context, opts adapter.ReadOptions) (*canonica
 		// "all" — prefer project, fall back to global
 		claudeDir = filepath.Join(opts.ProjectRoot, ".claude")
 		if _, err := os.Stat(claudeDir); os.IsNotExist(err) {
-			home, _ := os.UserHomeDir()
+			home := paths.MustHomeDir()
 			claudeDir = filepath.Join(home, ".claude")
 		}
 	}
@@ -281,7 +282,7 @@ func (a *Adapter) Write(ctx context.Context, cfg *canonical.ShifterConfig, opts 
 	var claudeDir string
 	switch opts.Scope {
 	case "global":
-		home, _ := os.UserHomeDir()
+		home := paths.MustHomeDir()
 		claudeDir = filepath.Join(home, ".claude")
 	default:
 		claudeDir = filepath.Join(opts.ProjectRoot, ".claude")

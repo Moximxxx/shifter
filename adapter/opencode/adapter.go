@@ -26,6 +26,7 @@ import (
 	"github.com/moximxxx/shifter/adapter"
 	"github.com/moximxxx/shifter/canonical"
 	"github.com/moximxxx/shifter/pkg/format"
+	"github.com/moximxxx/shifter/pkg/paths"
 )
 
 type Adapter struct{}
@@ -36,7 +37,7 @@ func (a *Adapter) ID() string   { return "opencode" }
 func (a *Adapter) Name() string { return "OpenCode" }
 
 func (a *Adapter) SearchPaths() []string {
-	home, _ := os.UserHomeDir()
+	home := paths.MustHomeDir()
 	return []string{
 		filepath.Join(home, ".config", "opencode"),
 		".opencode",
@@ -147,7 +148,7 @@ func (a *Adapter) Detect() (adapter.DetectionResult, error) {
 	result := adapter.DetectionResult{
 		Summary: make(map[string]int),
 	}
-	home, _ := os.UserHomeDir()
+	home := paths.MustHomeDir()
 
 	// Check for opencode.jsonc in various locations
 	globalCandidates := []string{
@@ -808,7 +809,7 @@ func (a *Adapter) Preview(ctx context.Context, cfg *canonical.ShifterConfig) (*a
 // ============================================================================
 
 func (a *Adapter) findConfigFile(opts adapter.ReadOptions) string {
-	home, _ := os.UserHomeDir()
+	home := paths.MustHomeDir()
 
 	candidates := []string{
 		filepath.Join(opts.ProjectRoot, "opencode.jsonc"),

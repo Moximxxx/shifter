@@ -7,6 +7,8 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
+
+	"github.com/moximxxx/shifter/pkg/paths"
 )
 
 // UserSettings holds all configurable options.
@@ -105,9 +107,6 @@ func defaults() *UserSettings {
 }
 
 func settingsPath() (string, error) {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return "", err
-	}
-	return filepath.Join(home, settingsDir, settingsFile), nil
+	home := paths.MustHomeDir()
+return filepath.Join(home, settingsDir, settingsFile), nil
 }

@@ -13,6 +13,8 @@ import (
 	"path/filepath"
 	"sort"
 	"time"
+
+	"github.com/moximxxx/shifter/pkg/paths"
 )
 
 const (
@@ -25,12 +27,8 @@ const (
 // Create creates a timestamped tar.gz backup of the specified files.
 // Returns the path to the created archive.
 func Create(files []string) (string, error) {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return "", fmt.Errorf("home dir: %w", err)
-	}
-
-	backupDir := filepath.Join(home, DefaultBackupDir)
+	home := paths.MustHomeDir()
+backupDir := filepath.Join(home, DefaultBackupDir)
 	if err := os.MkdirAll(backupDir, 0755); err != nil {
 		return "", fmt.Errorf("create backup dir: %w", err)
 	}
@@ -117,12 +115,8 @@ func Restore(archivePath string) error {
 
 // List returns all backup archives sorted by time (newest first).
 func List() ([]string, error) {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return nil, err
-	}
-
-	backupDir := filepath.Join(home, DefaultBackupDir)
+	home := paths.MustHomeDir()
+backupDir := filepath.Join(home, DefaultBackupDir)
 	entries, err := os.ReadDir(backupDir)
 	if err != nil {
 		if os.IsNotExist(err) {

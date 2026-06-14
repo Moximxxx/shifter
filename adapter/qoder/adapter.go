@@ -11,6 +11,7 @@ import (
 	"github.com/moximxxx/shifter/adapter"
 	"github.com/moximxxx/shifter/canonical"
 	"github.com/moximxxx/shifter/pkg/format"
+	"github.com/moximxxx/shifter/pkg/paths"
 	"gopkg.in/yaml.v3"
 )
 
@@ -22,7 +23,7 @@ func (a *Adapter) ID() string   { return "qoder" }
 func (a *Adapter) Name() string { return "Qoder" }
 
 func (a *Adapter) SearchPaths() []string {
-	home, _ := os.UserHomeDir()
+	home := paths.MustHomeDir()
 	return []string{
 		filepath.Join(home, ".qoder"),
 		filepath.Join(home, ".qoder-cn"),
@@ -49,7 +50,7 @@ func (a *Adapter) Detect() (adapter.DetectionResult, error) {
 	result := adapter.DetectionResult{
 		Summary: make(map[string]int),
 	}
-	home, _ := os.UserHomeDir()
+	home := paths.MustHomeDir()
 
 	for _, dir := range []string{".qoder", filepath.Join(home, ".qoder"), filepath.Join(home, ".qoder-cn")} {
 		if info, err := os.Stat(dir); err == nil && info.IsDir() {
@@ -103,7 +104,7 @@ func (a *Adapter) Read(ctx context.Context, opts adapter.ReadOptions) (*canonica
 	}
 
 	var qoderDir string
-	home, _ := os.UserHomeDir()
+	home := paths.MustHomeDir()
 
 	for _, dir := range []string{
 		filepath.Join(opts.ProjectRoot, ".qoder"),
@@ -185,7 +186,7 @@ func (a *Adapter) Write(ctx context.Context, cfg *canonical.ShifterConfig, opts 
 	var qoderDir string
 	switch opts.Scope {
 	case "global":
-		home, _ := os.UserHomeDir()
+		home := paths.MustHomeDir()
 		qoderDir = filepath.Join(home, ".qoder")
 	default:
 		qoderDir = filepath.Join(opts.ProjectRoot, ".qoder")
