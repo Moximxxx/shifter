@@ -567,7 +567,7 @@ func (m WizardModel) viewWelcome() string {
 	b.WriteString(i18n.T("welcome.select_lang"))
 	b.WriteString("\n\n")
 
-	langs := []string{"English", "简体中文"}
+	langs := []string{i18n.T("welcome.lang_en"), i18n.T("welcome.lang_zh")}
 	for i, name := range langs {
 		prefix := "  "
 		if i == m.langChoice {
@@ -728,7 +728,7 @@ func (m WizardModel) viewSettings() string {
 	b.WriteString(i18n.T("settings.language"))
 	b.WriteString("\n\n")
 
-	langs := []string{"English", "简体中文"}
+	langs := []string{i18n.T("welcome.lang_en"), i18n.T("welcome.lang_zh")}
 	for i, name := range langs {
 		prefix := "  "
 		if i == m.langChoice {
@@ -743,7 +743,7 @@ func (m WizardModel) viewSettings() string {
 	b.WriteString("\n")
 	b.WriteString(styles.MutedText.Render(i18n.T("settings.restart_hint")))
 	b.WriteString("\n\n")
-	b.WriteString(styles.HelpBar.Render(i18n.T("help.navigate") + " • Enter " + i18n.T("help.select") + " • Esc " + i18n.T("help.back")))
+	b.WriteString(styles.HelpBar.Render(i18n.T("help.navigate") + " • " + i18n.T("help.select") + " • " + i18n.T("help.back")))
 	return b.String()
 }
 
