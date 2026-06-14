@@ -57,6 +57,94 @@ func TestParseFrontMatterNoFrontmatter(t *testing.T) {
 	}
 }
 
+func TestStripBOM_WithBOM(t *testing.T) {
+	input := "\xEF\xBB\xBF" + `{"key": "value"}`
+	result := StripBOM(input)
+	if len(result) != len(input)-3 {
+		t.Errorf("BOM not stripped: got len %d, want %d", len(result), len(input)-3)
+	}
+	if result[0] != '{' {
+		t.Error("first char should be { after BOM removal")
+	}
+}
+
+func TestStripBOM_WithoutBOM(t *testing.T) {
+	input := `{"key": "value"}`
+	result := StripBOM(input)
+	if result != input {
+		t.Error("should be unchanged without BOM")
+	}
+}
+
+func TestStripJSONComments(t *testing.T) {
+	input := `{
+  "key": "value",
+  // this is a comment
+  "other": true // trailing comment
+}
+// full line comment
+`
+	result := StripJSONComments(input)
+	if strings.Contains(result, "//") {
+		t.Error("comments should be stripped")
+	}
+	if !strings.Contains(result, `"key"`) {
+		t.Error("content should be preserved")
+	}
+	if !strings.Contains(result, `"other"`) {
+		t.Error("content after trailing comment should be preserved")
+	}
+}
+
+func TestStripJSONComments_NoComments(t *testing.T) {
+	input := `{"key": "value"}`
+	result := StripJSONComments(input)
+	if result != input+"\n" {
+		t.Errorf("unchanged: got %q, want %q", result, input)
+	}
+}
+
+func TestParseFrontMatter_EmptyFile(t *testing.T) {
+	fm, body, err := ParseFrontMatter("")
+	if err != nil {
+		t.Errorf("empty file should not error: %v", err)
+	}
+	if fm != nil {
+		t.Error("empty file should return nil frontmatter")
+	}
+	if body != "" {
+		t.Error("empty file body should be empty")
+	}
+}
+
+func TestParseFrontMatter_OnlyDelimiters(t *testing.T) {
+	input := "---\nkey: value\n---\n"
+	fm, body, err := ParseFrontMatter(input)
+	if err != nil {
+		t.Fatalf("only delimiters: %v", err)
+	}
+	if body != "" {
+		t.Errorf("body should be empty, got %q", body)
+	}
+	if fm == nil || fm["key"] != "value" {
+		t.Errorf("frontmatter not parsed: %v", fm)
+	}
+}
+
+func TestParseFrontMatter_ChineseContent(t *testing.T) {
+	input := "---\nname: 代码审查专家\ndescription: 审查代码质量和安全性\n---\n你是一位资深代码审查专家。"
+	fm, body, err := ParseFrontMatter(input)
+	if err != nil {
+		t.Fatalf("chinese frontmatter: %v", err)
+	}
+	if fm["name"] != "代码审查专家" {
+		t.Errorf("chinese name: got %q", fm["name"])
+	}
+	if !strings.Contains(body, "资深代码审查专家") {
+		t.Error("chinese body not preserved")
+	}
+}
+
 func TestParseFrontMatterSimpleFrontmatter(t *testing.T) {
 	input := `---
 name: code-reviewer

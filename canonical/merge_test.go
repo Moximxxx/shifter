@@ -1,6 +1,7 @@
 package canonical
 
 import (
+	"strings"
 	"testing"
 )
 
@@ -212,6 +213,79 @@ func TestMergeEmptyConfigs(t *testing.T) {
 	}
 	if len(result.Config.MCPServers) != 0 {
 		t.Error("empty merge should have no MCP servers")
+	}
+}
+
+func TestMergeSkills(t *testing.T) {
+	a := []SkillDef{
+		{Name: "old-skill", Description: "Old", Markdown: "Old body"},
+	}
+	b := []SkillDef{
+		{Name: "old-skill", Description: "New", Markdown: "New body"},
+		{Name: "new-skill", Description: "New skill", Markdown: "New skill body"},
+	}
+
+	result := MergeConfigs(
+		&ShifterConfig{Skills: a},
+		&ShifterConfig{Skills: b},
+		MergeNewer,
+	)
+
+	if len(result.Config.Skills) != 2 {
+		t.Fatalf("skills: got %d, want 2", len(result.Config.Skills))
+	}
+	for _, sk := range result.Config.Skills {
+		if sk.Name == "old-skill" && sk.Description != "New" {
+			t.Errorf("newer strategy: skill should be updated, got %q", sk.Description)
+		}
+	}
+}
+
+func TestMergeCommands(t *testing.T) {
+	a := []CommandDef{
+		{Name: "review", Description: "Old desc", Prompt: "Old prompt"},
+	}
+	b := []CommandDef{
+		{Name: "review", Description: "New desc", Prompt: "New prompt"},
+		{Name: "deploy", Description: "Deploy command", Prompt: "Deploy prompt"},
+	}
+
+	result := MergeConfigs(
+		&ShifterConfig{Commands: a},
+		&ShifterConfig{Commands: b},
+		MergeNewer,
+	)
+
+	if len(result.Config.Commands) != 2 {
+		t.Fatalf("commands: got %d, want 2", len(result.Config.Commands))
+	}
+	for _, cmd := range result.Config.Commands {
+		if cmd.Name == "review" && cmd.Description != "New desc" {
+			t.Errorf("newer strategy: command should be updated, got %q", cmd.Description)
+		}
+	}
+}
+
+func TestMergeUnion_Instructions(t *testing.T) {
+	a := []Instruction{
+		{Path: "shared.md", Content: "Content from A", Scope: "root"},
+	}
+	b := []Instruction{
+		{Path: "shared.md", Content: "Content from B", Scope: "root"},
+	}
+
+	result := MergeConfigs(
+		&ShifterConfig{Instructions: a},
+		&ShifterConfig{Instructions: b},
+		MergeUnion,
+	)
+
+	for _, inst := range result.Config.Instructions {
+		if inst.Path == "shared.md" {
+			if !strings.Contains(inst.Content, "Content from A") || !strings.Contains(inst.Content, "Content from B") {
+				t.Error("union strategy: should concatenate contents")
+			}
+		}
 	}
 }
 
