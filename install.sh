@@ -27,9 +27,13 @@ MAGENTA='\033[0;35m'
 NC='\033[0m'
 
 # --- Helpers ---
-info()    { printf "${MAGENTA}→ %s${NC}\n" "$1"; }
+# info: white text, no color
+info()    { printf "→ %s\n" "$1"; }
+# success: green checkmark line
 success() { printf "${GREEN}✓ %s${NC}\n" "$1"; }
+# warn: yellow warning line
 warn()    { printf "${YELLOW}⚠ %s${NC}\n" "$1"; }
+# error: red error line
 error()   { printf "${RED}✗ %s${NC}\n" "$1"; exit 1; }
 
 # --- Platform Detection ---
@@ -124,7 +128,7 @@ SHIFTER_LOGO
 
     # Verify
     if command -v "$BINARY" >/dev/null 2>&1; then
-        printf "${GREEN}✓${NC} Installed version:\n"
+        printf "${GREEN}✓${NC} Installed: "
         "$BINARY" --version 2>/dev/null || true
     else
         warn "Binary installed but not in PATH"
