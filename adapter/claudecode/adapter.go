@@ -596,8 +596,6 @@ func readSkillDir(dir string) (canonical.SkillDef, error) {
 	skill := canonical.SkillDef{
 		Scripts:    make(map[string]string),
 		References: make(map[string]string),
-		Examples:   make(map[string]string),
-		Templates:  make(map[string]string),
 	}
 
 	skillMDPath := filepath.Join(dir, "SKILL.md")
@@ -648,7 +646,6 @@ func readSkillDir(dir string) (canonical.SkillDef, error) {
 
 	readDirFiles("scripts", skill.Scripts)
 	readDirFiles(".", skill.References) // REFERENCE.md, EXAMPLES.md
-	readDirFiles("templates", skill.Templates)
 
 	// Also check for REFERENCE.md and EXAMPLES.md in root
 	for _, name := range []string{"REFERENCE.md", "EXAMPLES.md"} {

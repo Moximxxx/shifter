@@ -125,10 +125,8 @@ func TestSkillDef_WithSupportingFiles(t *testing.T) {
 		Name: "test-skill", Description: "Test",
 		AllowedTools: []string{"Read", "Bash"},
 		Markdown: "## Skill Body",
-		Scripts:  map[string]string{"run.sh": "#!/bin/bash\necho hi"},
+		Scripts:    map[string]string{"run.sh": "#!/bin/bash\necho hi"},
 		References: map[string]string{"REFERENCE.md": "# Ref"},
-		Examples:   map[string]string{"EXAMPLES.md": "# Examples"},
-		Templates:  map[string]string{"tmpl.txt": "Hello {name}"},
 	}
 	data, _ := json.Marshal(skill)
 	var decoded SkillDef
@@ -171,18 +169,6 @@ func TestLossWarning(t *testing.T) {
 	}
 	if w.Severity != "warning" {
 		t.Errorf("severity: got %q, want %q", w.Severity, "warning")
-	}
-}
-
-func TestAddLoss(t *testing.T) {
-	cfg := &ShifterConfig{}
-	cfg.AddLoss(LossWarning{Feature: "test", Severity: "info"})
-	cfg.AddLosses([]LossWarning{
-		{Feature: "test2", Severity: "warning"},
-		{Feature: "test3", Severity: "critical"},
-	})
-	if len(cfg.LossWarnings) != 3 {
-		t.Errorf("expected 3 loss warnings, got %d", len(cfg.LossWarnings))
 	}
 }
 

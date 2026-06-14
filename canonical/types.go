@@ -26,16 +26,6 @@ type ShifterConfig struct {
 	LossWarnings []LossWarning `json:"_loss_warnings,omitempty"`
 }
 
-// AddLoss appends a loss warning.
-func (c *ShifterConfig) AddLoss(w LossWarning) {
-	c.LossWarnings = append(c.LossWarnings, w)
-}
-
-// AddLosses appends multiple loss warnings.
-func (c *ShifterConfig) AddLosses(ws []LossWarning) {
-	c.LossWarnings = append(c.LossWarnings, ws...)
-}
-
 // ConfigMeta holds metadata about the configuration source.
 type ConfigMeta struct {
 	SourceAdapter string    `json:"source_adapter"`
@@ -74,45 +64,30 @@ type SkillDef struct {
 	Name         string            `json:"name"`
 	Description  string            `json:"description"`
 	AllowedTools []string          `json:"allowed_tools,omitempty"`
-	DisallowedTools []string       `json:"disallowed_tools,omitempty"`
-	Markdown     string            `json:"markdown"`       // SKILL.md body
-	Scripts      map[string]string `json:"scripts,omitempty"`    // filename → content
-	References   map[string]string `json:"references,omitempty"` // filename → content
-	Examples     map[string]string `json:"examples,omitempty"`   // filename → content
-	Templates    map[string]string `json:"templates,omitempty"`  // filename → content
+	Markdown     string            `json:"markdown"`              // SKILL.md body
+	Scripts      map[string]string `json:"scripts,omitempty"`     // filename → content
+	References   map[string]string `json:"references,omitempty"`  // filename → content
 }
 
 // CommandDef represents a user-defined slash command.
 type CommandDef struct {
-	Name         string       `json:"name"`
-	Description  string       `json:"description,omitempty"`
-	Prompt       string       `json:"prompt"`        // template/instructions
-	ArgumentHint string       `json:"argument_hint,omitempty"`
-	AllowedTools []string     `json:"allowed_tools,omitempty"`
-	Args         []CommandArg `json:"args,omitempty"`
-}
-
-// CommandArg defines a parameter for a slash command.
-type CommandArg struct {
-	Name        string `json:"name"`
-	Description string `json:"description,omitempty"`
-	Required    bool   `json:"required,omitempty"`
+	Name         string `json:"name"`
+	Description  string `json:"description,omitempty"`
+	Prompt       string `json:"prompt"`                  // template/instructions
+	ArgumentHint string `json:"argument_hint,omitempty"`
 }
 
 // MCPServerDef represents an MCP server connection configuration.
 type MCPServerDef struct {
-	Name           string            `json:"name"`
-	Type           string            `json:"type"` // "stdio" | "http" | "sse"
-	Command        string            `json:"command,omitempty"`
-	Args           []string          `json:"args,omitempty"`
-	URL            string            `json:"url,omitempty"`
-	Env            map[string]string `json:"env,omitempty"`
-	Headers        map[string]string `json:"headers,omitempty"`
-	Timeout        int               `json:"timeout,omitempty"` // seconds
-	Enabled        bool              `json:"enabled"`
-	EnabledTools   []string          `json:"enabled_tools,omitempty"`
-	DisabledTools  []string          `json:"disabled_tools,omitempty"`
-	Trust          *bool             `json:"trust,omitempty"`
+	Name    string            `json:"name"`
+	Type    string            `json:"type"` // "stdio" | "http" | "sse"
+	Command string            `json:"command,omitempty"`
+	Args    []string          `json:"args,omitempty"`
+	URL     string            `json:"url,omitempty"`
+	Env     map[string]string `json:"env,omitempty"`
+	Timeout int               `json:"timeout,omitempty"` // seconds
+	Enabled bool              `json:"enabled"`
+	Trust   *bool             `json:"trust,omitempty"`
 }
 
 // PermissionSet groups allow and deny rules.

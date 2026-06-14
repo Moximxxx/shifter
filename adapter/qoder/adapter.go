@@ -335,7 +335,6 @@ func readQoderSkillDir(dir string) (canonical.SkillDef, error) {
 	skill := canonical.SkillDef{
 		Scripts:    make(map[string]string),
 		References: make(map[string]string),
-		Examples:   make(map[string]string),
 	}
 
 	skillMDPath := filepath.Join(dir, "SKILL.md")
