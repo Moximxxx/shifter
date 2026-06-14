@@ -14,7 +14,7 @@ const ascii = `
 var (
 	// Purple gradient for the logo
 	logoStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#A78BFA")).
+			Foreground(lipgloss.Color("#7C3AED")).
 			Bold(true)
 
 	// Tagline below the logo
@@ -49,7 +49,7 @@ func Render(tagline string) string {
 // Small returns a compact one-line brand name.
 func Small() string {
 	return lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#A78BFA")).
+		Foreground(lipgloss.Color("#7C3AED")).
 		Bold(true).
 		Render("🔄 Shifter")
 }
