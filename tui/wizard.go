@@ -65,6 +65,7 @@ const (
 type WizardModel struct {
 	screen    WizardScreen
 	prevScreen WizardScreen
+	backStack []WizardScreen // navigation history for Esc
 	width     int
 	height    int
 	quitting  bool
@@ -180,7 +181,11 @@ func (m WizardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.quitting = true
 				return m, tea.Quit
 			}
-			m.prevScreen, m.screen = m.screen, m.prevScreen
+			// Pop from back stack to go back
+			if len(m.backStack) > 0 {
+				m.screen = m.backStack[len(m.backStack)-1]
+				m.backStack = m.backStack[:len(m.backStack)-1]
+			}
 			m.cursorIdx = 0
 			m.errorMsg = ""
 			return m, nil
@@ -286,22 +291,26 @@ func (m *WizardModel) handleEnter() (tea.Model, tea.Cmd) {
 		switch m.cursorIdx {
 		case 0: // Save
 			m.prevScreen = WizMenu
-			m.screen = WizSaveSelectAgent
+			m.backStack = append(m.backStack, m.screen)
+				m.screen = WizSaveSelectAgent
 			m.cursorIdx = 0
 		case 1: // Load
 			m.prevScreen = WizMenu
-			m.screen = WizLoadSelectProfile
+			m.backStack = append(m.backStack, m.screen)
+				m.screen = WizLoadSelectProfile
 			m.cursorIdx = 0
 			if !m.profilesLoaded {
 				return m, loadProfilesCmd
 			}
 		case 2: // Port
 			m.prevScreen = WizMenu
-			m.screen = WizPortSelectSource
+			m.backStack = append(m.backStack, m.screen)
+				m.screen = WizPortSelectSource
 			m.cursorIdx = m.firstFoundIdx()
 		case 3: // Settings
 			m.prevScreen = WizMenu
-			m.screen = WizSettings
+			m.backStack = append(m.backStack, m.screen)
+				m.screen = WizSettings
 			m.cursorIdx = 0
 			// Preselect current language
 			if i18n.Lang() == "zh" {
@@ -316,7 +325,8 @@ func (m *WizardModel) handleEnter() (tea.Model, tea.Cmd) {
 		if f := m.foundAgents(); m.cursorIdx < len(f) {
 			m.selectedAgentID = f[m.cursorIdx].ID
 			m.prevScreen = WizSaveSelectAgent
-			m.screen = WizSaveName
+			m.backStack = append(m.backStack, m.screen)
+				m.screen = WizSaveName
 			m.inputMode = true
 			m.inputText = ""
 		}
@@ -325,9 +335,10 @@ func (m *WizardModel) handleEnter() (tea.Model, tea.Cmd) {
 	case WizPortSelectSource:
 		if f := m.foundAgents(); m.cursorIdx < len(f) {
 			m.sourceID = f[m.cursorIdx].ID
-			m.prevScreen = WizPortSelectSource
-			m.screen = WizPortSelectTarget
+			m.backStack = append(m.backStack, m.screen)
+				m.screen = WizPortSelectTarget
 			m.cursorIdx = 0
+			// Keep prevScreen pointing to menu so Esc goes back to menu
 		}
 		return m, nil
 
@@ -336,6 +347,7 @@ func (m *WizardModel) handleEnter() (tea.Model, tea.Cmd) {
 			if f[m.cursorIdx].ID != m.sourceID {
 				m.targetID = f[m.cursorIdx].ID
 				m.prevScreen = WizPortSelectTarget
+				m.backStack = append(m.backStack, m.screen)
 				m.screen = WizPortAspects
 				m.cursorIdx = 0
 				m.buildPortAspects()
@@ -352,7 +364,8 @@ func (m *WizardModel) handleEnter() (tea.Model, tea.Cmd) {
 			p := m.profileList[m.cursorIdx]
 			m.selectedProfile = &p
 			m.prevScreen = WizLoadSelectProfile
-			m.screen = WizLoadSelectTarget
+			m.backStack = append(m.backStack, m.screen)
+				m.screen = WizLoadSelectTarget
 			m.cursorIdx = 0
 		}
 		return m, nil
