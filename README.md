@@ -1,6 +1,6 @@
 # 🔄 Shifter
 
-[📖 中文文档](README.zh-CN.md) | [📋 操作手册](MANUAL.zh-CN.md)
+[📖 中文文档](README.zh-CN.md) | [📋 Manual](MANUAL.md)
 
 **One-click config porting between coding agents.** Configure once, use everywhere.
 
