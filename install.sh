@@ -16,7 +16,7 @@ set -e
 REPO="Moximxxx/shifter"
 DEFAULT_VERSION="1.0.0"
 VERSION="${VERSION:-$DEFAULT_VERSION}"
-INSTALL_DIR="${INSTALL_DIR:-/usr/local/bin}"
+INSTALL_DIR="${INSTALL_DIR:-$HOME/.local/bin}"
 BINARY="shifter"
 
 # Colors
@@ -65,11 +65,13 @@ main() {
 SHIFTER_LOGO
     printf "${NC}\n"
 
-    # Clean up old installations that might shadow the new one
+    # Ensure install dir exists and is in PATH
+    mkdir -p "$INSTALL_DIR"
+
     info "Installing Shifter v${VERSION}..."
-    OLD_PATHS="$HOME/.local/bin/$BINARY $HOME/go/bin/$BINARY"
-    for old in $OLD_PATHS; do
-        if [ -f "$old" ]; then
+    # Clean up old installations
+    for old in "$HOME/.local/bin/$BINARY" "$HOME/go/bin/$BINARY" "/usr/local/bin/$BINARY"; do
+        if [ -f "$old" ] && [ "$old" != "$INSTALL_DIR/$BINARY" ]; then
             rm -f "$old"
         fi
     done
@@ -146,6 +148,9 @@ SHIFTER_LOGO
     echo "  shifter env init >> ~/.bashrc"
 
     echo ""
+    # Clear shell command cache so 'shifter' resolves to new binary
+    hash -r 2>/dev/null || true
+
     success "Shifter v$VERSION installed successfully!"
 }
 
