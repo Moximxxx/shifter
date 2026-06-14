@@ -304,12 +304,12 @@ func (a *Adapter) Write(ctx context.Context, cfg *canonical.ShifterConfig, opts 
 
 	settingsPath := filepath.Join(geminiDir, "settings.json")
 	if !opts.DryRun {
-		os.MkdirAll(geminiDir, 0755)
+		os.MkdirAll(geminiDir, paths.DirPerm)
 		data, err := json.MarshalIndent(gs, "", "  ")
 		if err != nil {
 			return result, err
 		}
-		if err := os.WriteFile(settingsPath, data, 0644); err != nil {
+		if err := os.WriteFile(settingsPath, data, paths.FilePerm); err != nil {
 			return result, err
 		}
 	}
@@ -320,7 +320,7 @@ func (a *Adapter) Write(ctx context.Context, cfg *canonical.ShifterConfig, opts 
 		if inst.Scope == "root" {
 			geminiMDPath := filepath.Join(opts.ProjectRoot, "GEMINI.md")
 			if !opts.DryRun {
-				os.WriteFile(geminiMDPath, []byte(inst.Content), 0644)
+				os.WriteFile(geminiMDPath, []byte(inst.Content), paths.FilePerm)
 			}
 			result.FilesWritten = append(result.FilesWritten, geminiMDPath)
 			break
@@ -330,6 +330,3 @@ func (a *Adapter) Write(ctx context.Context, cfg *canonical.ShifterConfig, opts 
 	return result, nil
 }
 
-func (a *Adapter) Preview(ctx context.Context, cfg *canonical.ShifterConfig) (*adapter.DiffResult, error) {
-	return &adapter.DiffResult{}, nil
-}

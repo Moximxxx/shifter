@@ -293,14 +293,14 @@ func (a *Adapter) Write(ctx context.Context, cfg *canonical.ShifterConfig, opts 
 	if settings != nil {
 		settingsPath := filepath.Join(claudeDir, "settings.json")
 		if !opts.DryRun {
-			if err := os.MkdirAll(claudeDir, 0755); err != nil {
+			if err := os.MkdirAll(claudeDir, paths.DirPerm); err != nil {
 				return result, fmt.Errorf("create claude dir: %w", err)
 			}
 			data, err := json.MarshalIndent(settings, "", "  ")
 			if err != nil {
 				return result, fmt.Errorf("marshal settings: %w", err)
 			}
-			if err := os.WriteFile(settingsPath, data, 0644); err != nil {
+			if err := os.WriteFile(settingsPath, data, paths.FilePerm); err != nil {
 				return result, fmt.Errorf("write settings: %w", err)
 			}
 		}
@@ -312,7 +312,7 @@ func (a *Adapter) Write(ctx context.Context, cfg *canonical.ShifterConfig, opts 
 		if inst.Scope == "root" {
 			claudeMDPath := filepath.Join(opts.ProjectRoot, "CLAUDE.md")
 			if !opts.DryRun {
-				if err := os.WriteFile(claudeMDPath, []byte(inst.Content), 0644); err != nil {
+				if err := os.WriteFile(claudeMDPath, []byte(inst.Content), paths.FilePerm); err != nil {
 					return result, fmt.Errorf("write CLAUDE.md: %w", err)
 				}
 			}
@@ -325,7 +325,7 @@ func (a *Adapter) Write(ctx context.Context, cfg *canonical.ShifterConfig, opts 
 	if len(cfg.Agents) > 0 {
 		agentsDir := filepath.Join(claudeDir, "agents")
 		if !opts.DryRun {
-			if err := os.MkdirAll(agentsDir, 0755); err != nil {
+			if err := os.MkdirAll(agentsDir, paths.DirPerm); err != nil {
 				return result, fmt.Errorf("create agents dir: %w", err)
 			}
 		}
@@ -333,7 +333,7 @@ func (a *Adapter) Write(ctx context.Context, cfg *canonical.ShifterConfig, opts 
 			agentPath := filepath.Join(agentsDir, agent.Name+".md")
 			content := formatAgentFile(agent)
 			if !opts.DryRun {
-				if err := os.WriteFile(agentPath, []byte(content), 0644); err != nil {
+				if err := os.WriteFile(agentPath, []byte(content), paths.FilePerm); err != nil {
 					return result, fmt.Errorf("write agent %s: %w", agent.Name, err)
 				}
 			}
@@ -345,14 +345,14 @@ func (a *Adapter) Write(ctx context.Context, cfg *canonical.ShifterConfig, opts 
 	for _, skill := range cfg.Skills {
 		skillDir := filepath.Join(claudeDir, "skills", skill.Name)
 		if !opts.DryRun {
-			if err := os.MkdirAll(skillDir, 0755); err != nil {
+			if err := os.MkdirAll(skillDir, paths.DirPerm); err != nil {
 				return result, fmt.Errorf("create skill dir %s: %w", skill.Name, err)
 			}
 		}
 		skillPath := filepath.Join(skillDir, "SKILL.md")
 		content := formatSkillFile(skill)
 		if !opts.DryRun {
-			if err := os.WriteFile(skillPath, []byte(content), 0644); err != nil {
+			if err := os.WriteFile(skillPath, []byte(content), paths.FilePerm); err != nil {
 				return result, fmt.Errorf("write skill %s: %w", skill.Name, err)
 			}
 		}
@@ -362,15 +362,15 @@ func (a *Adapter) Write(ctx context.Context, cfg *canonical.ShifterConfig, opts 
 		for name, content := range skill.Scripts {
 			p := filepath.Join(skillDir, "scripts", name)
 			if !opts.DryRun {
-				os.MkdirAll(filepath.Dir(p), 0755)
-				os.WriteFile(p, []byte(content), 0755)
+				os.MkdirAll(filepath.Dir(p), paths.DirPerm)
+				os.WriteFile(p, []byte(content), paths.DirPerm)
 			}
 			result.FilesWritten = append(result.FilesWritten, p)
 		}
 		for name, content := range skill.References {
 			p := filepath.Join(skillDir, name)
 			if !opts.DryRun {
-				os.WriteFile(p, []byte(content), 0644)
+				os.WriteFile(p, []byte(content), paths.FilePerm)
 			}
 			result.FilesWritten = append(result.FilesWritten, p)
 		}
@@ -380,7 +380,7 @@ func (a *Adapter) Write(ctx context.Context, cfg *canonical.ShifterConfig, opts 
 	if len(cfg.Commands) > 0 {
 		commandsDir := filepath.Join(claudeDir, "commands")
 		if !opts.DryRun {
-			if err := os.MkdirAll(commandsDir, 0755); err != nil {
+			if err := os.MkdirAll(commandsDir, paths.DirPerm); err != nil {
 				return result, fmt.Errorf("create commands dir: %w", err)
 			}
 		}
@@ -388,7 +388,7 @@ func (a *Adapter) Write(ctx context.Context, cfg *canonical.ShifterConfig, opts 
 			cmdPath := filepath.Join(commandsDir, cmd.Name+".md")
 			content := formatCommandFile(cmd)
 			if !opts.DryRun {
-				if err := os.WriteFile(cmdPath, []byte(content), 0644); err != nil {
+				if err := os.WriteFile(cmdPath, []byte(content), paths.FilePerm); err != nil {
 					return result, fmt.Errorf("write command %s: %w", cmd.Name, err)
 				}
 			}

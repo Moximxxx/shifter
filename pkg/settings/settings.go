@@ -72,7 +72,7 @@ func Save(s *UserSettings) error {
 	}
 
 	dir := filepath.Dir(path)
-	if err := os.MkdirAll(dir, 0755); err != nil {
+	if err := os.MkdirAll(dir, paths.DirPerm); err != nil {
 		return fmt.Errorf("create settings dir: %w", err)
 	}
 
@@ -81,7 +81,7 @@ func Save(s *UserSettings) error {
 		return err
 	}
 
-	if err := os.WriteFile(path, data, 0644); err != nil {
+	if err := os.WriteFile(path, data, paths.FilePerm); err != nil {
 		return err
 	}
 

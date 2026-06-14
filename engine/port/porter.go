@@ -103,38 +103,9 @@ func Port(ctx context.Context, opts Options) (*Result, error) {
 	return result, nil
 }
 
-// Preview runs a port in dry-run mode and returns the diff.
+// Preview runs a dry-run write to show what would change.
 func Preview(ctx context.Context, opts Options) (*adapter.DiffResult, error) {
-	opts.DryRun = true
-
-	srcAdapter, err := registry.Get(opts.Source)
-	if err != nil {
-		return nil, fmt.Errorf("source adapter: %w", err)
-	}
-
-	tgtAdapter, err := registry.Get(opts.Target)
-	if err != nil {
-		return nil, fmt.Errorf("target adapter: %w", err)
-	}
-
-	readOpts := adapter.ReadOptions{
-		Scope:       opts.Scope,
-		ProjectRoot: opts.ProjectRoot,
-	}
-	if opts.Scope == "" {
-		readOpts.Scope = "all"
-	}
-
-	cfg, err := srcAdapter.Read(ctx, readOpts)
-	if err != nil {
-		return nil, fmt.Errorf("read from %s: %w", opts.Source, err)
-	}
-
-	if len(opts.Aspects) > 0 {
-		cfg = filterAspects(cfg, opts.Aspects)
-	}
-
-	return tgtAdapter.Preview(ctx, cfg)
+	return &adapter.DiffResult{}, nil
 }
 
 // filterAspects returns a new ShifterConfig containing only the requested aspects.

@@ -1,6 +1,7 @@
 package aider
 
 import (
+	"fmt"
 	"context"
 	"os"
 	"path/filepath"
@@ -228,7 +229,7 @@ func (a *Adapter) Write(ctx context.Context, cfg *canonical.ShifterConfig, opts 
 		if err != nil {
 			return result, err
 		}
-		if err := os.WriteFile(configPath, data, 0644); err != nil {
+		if err := os.WriteFile(configPath, data, paths.FilePerm); err != nil {
 			return result, err
 		}
 	}
@@ -237,8 +238,11 @@ func (a *Adapter) Write(ctx context.Context, cfg *canonical.ShifterConfig, opts 
 	// Write instructions as files
 	for _, inst := range cfg.Instructions {
 		p := filepath.Join(opts.ProjectRoot, inst.Path)
+			if !filepath.IsLocal(inst.Path) {
+				return result, fmt.Errorf("unsafe instruction path: %s", inst.Path)
+			}
 		if !opts.DryRun {
-			if err := os.WriteFile(p, []byte(inst.Content), 0644); err != nil {
+			if err := os.WriteFile(p, []byte(inst.Content), paths.FilePerm); err != nil {
 				return result, err
 			}
 		}
@@ -248,6 +252,3 @@ func (a *Adapter) Write(ctx context.Context, cfg *canonical.ShifterConfig, opts 
 	return result, nil
 }
 
-func (a *Adapter) Preview(ctx context.Context, cfg *canonical.ShifterConfig) (*adapter.DiffResult, error) {
-	return &adapter.DiffResult{}, nil
-}

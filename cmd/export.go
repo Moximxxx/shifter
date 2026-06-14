@@ -11,6 +11,7 @@ import (
 
 	"github.com/moximxxx/shifter/adapter"
 	"github.com/moximxxx/shifter/canonical"
+	"github.com/moximxxx/shifter/pkg/paths"
 	"github.com/moximxxx/shifter/registry"
 )
 
@@ -98,7 +99,7 @@ func runExport(cmd *cobra.Command, args []string) error {
 	}
 
 	if exportOutput != "" {
-		if err := os.WriteFile(exportOutput, output, 0644); err != nil {
+		if err := os.WriteFile(exportOutput, output, paths.FilePerm); err != nil {
 			return fmt.Errorf("write: %w", err)
 		}
 		fmt.Fprintf(cmd.OutOrStdout(), "✓ Exported %s config to %s\n", agentID, exportOutput)

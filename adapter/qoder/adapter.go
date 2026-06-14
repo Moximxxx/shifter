@@ -197,13 +197,13 @@ func (a *Adapter) Write(ctx context.Context, cfg *canonical.ShifterConfig, opts 
 	if len(cfg.Agents) > 0 {
 		agentsDir := filepath.Join(qoderDir, "agents")
 		if !opts.DryRun {
-			os.MkdirAll(agentsDir, 0755)
+			os.MkdirAll(agentsDir, paths.DirPerm)
 		}
 		for _, agent := range cfg.Agents {
 			agentPath := filepath.Join(agentsDir, agent.Name+".md")
 			content := formatQoderAgentFile(agent)
 			if !opts.DryRun {
-				os.WriteFile(agentPath, []byte(content), 0644)
+				os.WriteFile(agentPath, []byte(content), paths.FilePerm)
 			}
 			result.FilesWritten = append(result.FilesWritten, agentPath)
 		}
@@ -213,15 +213,15 @@ func (a *Adapter) Write(ctx context.Context, cfg *canonical.ShifterConfig, opts 
 	if len(cfg.Skills) > 0 {
 		skillsDir := filepath.Join(qoderDir, "skills")
 		if !opts.DryRun {
-			os.MkdirAll(skillsDir, 0755)
+			os.MkdirAll(skillsDir, paths.DirPerm)
 		}
 		for _, skill := range cfg.Skills {
 			skillDir := filepath.Join(skillsDir, skill.Name)
 			skillPath := filepath.Join(skillDir, "SKILL.md")
 			content := formatQoderSkillFile(skill)
 			if !opts.DryRun {
-				os.MkdirAll(skillDir, 0755)
-				os.WriteFile(skillPath, []byte(content), 0644)
+				os.MkdirAll(skillDir, paths.DirPerm)
+				os.WriteFile(skillPath, []byte(content), paths.FilePerm)
 				for name, content := range skill.Scripts {
 					os.MkdirAll(filepath.Join(skillDir, "scripts"), 0755)
 					os.WriteFile(filepath.Join(skillDir, "scripts", name), []byte(content), 0755)
@@ -251,7 +251,7 @@ func (a *Adapter) Write(ctx context.Context, cfg *canonical.ShifterConfig, opts 
 		mcpPath := filepath.Join(qoderDir, "mcp.json")
 		if !opts.DryRun {
 			data, _ := json.MarshalIndent(mcpConfig, "", "  ")
-			os.WriteFile(mcpPath, data, 0644)
+			os.WriteFile(mcpPath, data, paths.FilePerm)
 		}
 		result.FilesWritten = append(result.FilesWritten, mcpPath)
 	}
@@ -269,9 +269,6 @@ func (a *Adapter) Write(ctx context.Context, cfg *canonical.ShifterConfig, opts 
 	return result, nil
 }
 
-func (a *Adapter) Preview(ctx context.Context, cfg *canonical.ShifterConfig) (*adapter.DiffResult, error) {
-	return &adapter.DiffResult{}, nil
-}
 
 func readQoderAgentFile(path string) (canonical.AgentDef, error) {
 	agent := canonical.AgentDef{}

@@ -215,7 +215,7 @@ func (a *Adapter) Write(ctx context.Context, cfg *canonical.ShifterConfig, opts 
 	configPath := filepath.Join(codexDir, "config.toml")
 
 	if !opts.DryRun {
-		if err := os.MkdirAll(codexDir, 0755); err != nil {
+		if err := os.MkdirAll(codexDir, paths.DirPerm); err != nil {
 			return result, fmt.Errorf("create codex dir: %w", err)
 		}
 
@@ -223,7 +223,7 @@ func (a *Adapter) Write(ctx context.Context, cfg *canonical.ShifterConfig, opts 
 		if err := toml.NewEncoder(&buf).Encode(cc); err != nil {
 			return result, fmt.Errorf("marshal config.toml: %w", err)
 		}
-		if err := os.WriteFile(configPath, []byte(buf.String()), 0644); err != nil {
+		if err := os.WriteFile(configPath, []byte(buf.String()), paths.FilePerm); err != nil {
 			return result, fmt.Errorf("write config.toml: %w", err)
 		}
 	}
@@ -245,7 +245,7 @@ func (a *Adapter) Write(ctx context.Context, cfg *canonical.ShifterConfig, opts 
 			}
 
 			if !opts.DryRun {
-				if err := os.WriteFile(codexMDPath, []byte(content), 0644); err != nil {
+				if err := os.WriteFile(codexMDPath, []byte(content), paths.FilePerm); err != nil {
 					return result, fmt.Errorf("write codex.md: %w", err)
 				}
 			}
@@ -259,7 +259,7 @@ func (a *Adapter) Write(ctx context.Context, cfg *canonical.ShifterConfig, opts 
 		codexMDPath := filepath.Join(codexDir, "codex.md")
 		content := a.embedCommands(cfg.Commands)
 		if !opts.DryRun {
-			if err := os.WriteFile(codexMDPath, []byte(content), 0644); err != nil {
+			if err := os.WriteFile(codexMDPath, []byte(content), paths.FilePerm); err != nil {
 				return result, fmt.Errorf("write codex.md: %w", err)
 			}
 		}
@@ -272,9 +272,6 @@ func (a *Adapter) Write(ctx context.Context, cfg *canonical.ShifterConfig, opts 
 }
 
 // Preview shows proposed changes without writing.
-func (a *Adapter) Preview(ctx context.Context, cfg *canonical.ShifterConfig) (*adapter.DiffResult, error) {
-	return &adapter.DiffResult{}, nil
-}
 
 func (a *Adapter) readConfig(cc *codexConfig, cfg *canonical.ShifterConfig) {
 	// Model

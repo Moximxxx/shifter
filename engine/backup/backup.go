@@ -11,6 +11,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"sort"
 	"time"
 
@@ -29,7 +30,7 @@ const (
 func Create(files []string) (string, error) {
 	home := paths.MustHomeDir()
 backupDir := filepath.Join(home, DefaultBackupDir)
-	if err := os.MkdirAll(backupDir, 0755); err != nil {
+	if err := os.MkdirAll(backupDir, paths.DirPerm); err != nil {
 		return "", fmt.Errorf("create backup dir: %w", err)
 	}
 
@@ -89,16 +90,22 @@ func Restore(archivePath string) error {
 			return fmt.Errorf("read tar: %w", err)
 		}
 
+		// Path traversal protection
+		cleanName := filepath.Clean(header.Name)
+		if strings.Contains(cleanName, "..") {
+			return fmt.Errorf("unsafe path in archive: %s", header.Name)
+		}
+
 		switch header.Typeflag {
 		case tar.TypeDir:
-			if err := os.MkdirAll(header.Name, 0755); err != nil {
+			if err := os.MkdirAll(cleanName, paths.DirPerm); err != nil {
 				return fmt.Errorf("create dir %s: %w", header.Name, err)
 			}
 		case tar.TypeReg:
-			if err := os.MkdirAll(filepath.Dir(header.Name), 0755); err != nil {
+			if err := os.MkdirAll(filepath.Dir(cleanName), paths.DirPerm); err != nil {
 				return fmt.Errorf("create parent dir for %s: %w", header.Name, err)
 			}
-			outFile, err := os.Create(header.Name)
+			outFile, err := os.Create(cleanName)
 			if err != nil {
 				return fmt.Errorf("create file %s: %w", header.Name, err)
 			}

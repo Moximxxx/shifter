@@ -728,7 +728,7 @@ func (a *Adapter) Write(ctx context.Context, cfg *canonical.ShifterConfig, opts 
 	// Write config file
 	configPath := filepath.Join(opts.ProjectRoot, "opencode.jsonc")
 	if !opts.DryRun {
-		if err := os.MkdirAll(filepath.Dir(configPath), 0755); err != nil {
+		if err := os.MkdirAll(filepath.Dir(configPath), paths.DirPerm); err != nil {
 			return result, fmt.Errorf("create dir: %w", err)
 		}
 		data, err := json.MarshalIndent(oc, "", "  ")
@@ -738,7 +738,7 @@ func (a *Adapter) Write(ctx context.Context, cfg *canonical.ShifterConfig, opts 
 		// Write as .jsonc with schema comment
 		content := "{\n  \"$schema\": \"https://opencode.ai/config.json\",\n"
 		content += string(data)[1:] // append rest of JSON
-		if err := os.WriteFile(configPath, []byte(content), 0644); err != nil {
+		if err := os.WriteFile(configPath, []byte(content), paths.FilePerm); err != nil {
 			return result, fmt.Errorf("write config: %w", err)
 		}
 	}
@@ -748,13 +748,13 @@ func (a *Adapter) Write(ctx context.Context, cfg *canonical.ShifterConfig, opts 
 	if len(cfg.Agents) > 0 {
 		agentsDir := filepath.Join(opts.ProjectRoot, ".opencode", "agents")
 		if !opts.DryRun {
-			os.MkdirAll(agentsDir, 0755)
+			os.MkdirAll(agentsDir, paths.DirPerm)
 		}
 		for _, agent := range cfg.Agents {
 			agentPath := filepath.Join(agentsDir, agent.Name+".md")
 			content := formatOpenCodeAgentFile(agent)
 			if !opts.DryRun {
-				os.WriteFile(agentPath, []byte(content), 0644)
+				os.WriteFile(agentPath, []byte(content), paths.FilePerm)
 			}
 			result.FilesWritten = append(result.FilesWritten, agentPath)
 		}
@@ -764,13 +764,13 @@ func (a *Adapter) Write(ctx context.Context, cfg *canonical.ShifterConfig, opts 
 	if len(cfg.Commands) > 0 {
 		commandsDir := filepath.Join(opts.ProjectRoot, ".opencode", "commands")
 		if !opts.DryRun {
-			os.MkdirAll(commandsDir, 0755)
+			os.MkdirAll(commandsDir, paths.DirPerm)
 		}
 		for _, cmd := range cfg.Commands {
 			cmdPath := filepath.Join(commandsDir, cmd.Name+".md")
 			content := formatOpenCodeCommandFile(cmd)
 			if !opts.DryRun {
-				os.WriteFile(cmdPath, []byte(content), 0644)
+				os.WriteFile(cmdPath, []byte(content), paths.FilePerm)
 			}
 			result.FilesWritten = append(result.FilesWritten, cmdPath)
 		}
@@ -779,10 +779,13 @@ func (a *Adapter) Write(ctx context.Context, cfg *canonical.ShifterConfig, opts 
 	// Write instruction files
 	for _, inst := range cfg.Instructions {
 		p := filepath.Join(opts.ProjectRoot, inst.Path)
+			if !filepath.IsLocal(inst.Path) {
+				return result, fmt.Errorf("unsafe instruction path: %s", inst.Path)
+			}
 		if !opts.DryRun {
 			dir := filepath.Dir(p)
-			os.MkdirAll(dir, 0755)
-			os.WriteFile(p, []byte(inst.Content), 0644)
+			os.MkdirAll(dir, paths.DirPerm)
+			os.WriteFile(p, []byte(inst.Content), paths.FilePerm)
 		}
 		result.FilesWritten = append(result.FilesWritten, p)
 	}
@@ -796,9 +799,6 @@ func (a *Adapter) Write(ctx context.Context, cfg *canonical.ShifterConfig, opts 
 	return result, nil
 }
 
-func (a *Adapter) Preview(ctx context.Context, cfg *canonical.ShifterConfig) (*adapter.DiffResult, error) {
-	return &adapter.DiffResult{}, nil
-}
 
 // ============================================================================
 // Helpers

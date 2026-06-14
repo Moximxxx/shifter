@@ -19,7 +19,6 @@ type AgentAdapter interface {
 	SearchPaths() []string
 
 	// Detect checks whether this agent is configured on the system.
-	// Returns detected paths and a summary of what was found.
 	Detect() (DetectionResult, error)
 
 	// Read converts native config to the canonical model.
@@ -30,9 +29,6 @@ type AgentAdapter interface {
 
 	// Capabilities reports what this agent supports.
 	Capabilities() canonical.CapabilityMatrix
-
-	// Preview shows what would change without writing.
-	Preview(ctx context.Context, cfg *canonical.ShifterConfig) (*DiffResult, error)
 }
 
 // DetectionResult describes whether and where an agent's config was found.

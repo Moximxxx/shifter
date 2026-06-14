@@ -8,6 +8,7 @@ import (
 
 	"github.com/moximxxx/shifter/adapter"
 	"github.com/moximxxx/shifter/canonical"
+	"github.com/moximxxx/shifter/pkg/paths"
 	"github.com/moximxxx/shifter/pkg/convert"
 )
 
@@ -137,14 +138,14 @@ func (a *Adapter) Write(ctx context.Context, cfg *canonical.ShifterConfig, opts 
 	if len(namedInstructions) > 0 {
 		rulesDir := filepath.Join(opts.ProjectRoot, ".clinerules")
 		if !opts.DryRun {
-			os.MkdirAll(rulesDir, 0755)
+			os.MkdirAll(rulesDir, paths.DirPerm)
 		}
 
 		// Write root instruction as general.md
 		if rootInstruction != nil {
 			p := filepath.Join(rulesDir, "general.md")
 			if !opts.DryRun {
-				os.WriteFile(p, []byte(rootInstruction.Content), 0644)
+				os.WriteFile(p, []byte(rootInstruction.Content), paths.FilePerm)
 			}
 			result.FilesWritten = append(result.FilesWritten, p)
 		}
@@ -153,7 +154,7 @@ func (a *Adapter) Write(ctx context.Context, cfg *canonical.ShifterConfig, opts 
 			name := strings.TrimSuffix(filepath.Base(inst.Path), ".md") + ".md"
 			p := filepath.Join(rulesDir, name)
 			if !opts.DryRun {
-				os.WriteFile(p, []byte(inst.Content), 0644)
+				os.WriteFile(p, []byte(inst.Content), paths.FilePerm)
 			}
 			result.FilesWritten = append(result.FilesWritten, p)
 		}
@@ -161,7 +162,7 @@ func (a *Adapter) Write(ctx context.Context, cfg *canonical.ShifterConfig, opts 
 		// Single .clinerules file
 		p := filepath.Join(opts.ProjectRoot, ".clinerules")
 		if !opts.DryRun {
-			os.WriteFile(p, []byte(rootInstruction.Content), 0644)
+			os.WriteFile(p, []byte(rootInstruction.Content), paths.FilePerm)
 		}
 		result.FilesWritten = append(result.FilesWritten, p)
 	}
@@ -177,8 +178,8 @@ func (a *Adapter) Write(ctx context.Context, cfg *canonical.ShifterConfig, opts 
 		rulesDir := filepath.Join(opts.ProjectRoot, ".clinerules")
 		p := filepath.Join(rulesDir, "imported-agents.md")
 		if !opts.DryRun {
-			os.MkdirAll(rulesDir, 0755)
-			os.WriteFile(p, []byte(b.String()), 0644)
+			os.MkdirAll(rulesDir, paths.DirPerm)
+			os.WriteFile(p, []byte(b.String()), paths.FilePerm)
 		}
 		result.FilesWritten = append(result.FilesWritten, p)
 		result.LossWarnings = append(result.LossWarnings, convert.NewLossWarning("agents", cfg.Meta.SourceAdapter, a.ID(), "Cline has no subagent system; agent definitions saved as .clinerules/imported-agents.md", "warning"))
@@ -188,6 +189,3 @@ func (a *Adapter) Write(ctx context.Context, cfg *canonical.ShifterConfig, opts 
 	return result, nil
 }
 
-func (a *Adapter) Preview(ctx context.Context, cfg *canonical.ShifterConfig) (*adapter.DiffResult, error) {
-	return &adapter.DiffResult{}, nil
-}

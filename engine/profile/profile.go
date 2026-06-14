@@ -34,7 +34,7 @@ type Profile struct {
 func Save(p Profile) error {
 	home := paths.MustHomeDir()
 dir := filepath.Join(home, profilesDir)
-	if err := os.MkdirAll(dir, 0755); err != nil {
+	if err := os.MkdirAll(dir, paths.DirPerm); err != nil {
 		return fmt.Errorf("create profiles dir: %w", err)
 	}
 
@@ -51,7 +51,7 @@ dir := filepath.Join(home, profilesDir)
 		return fmt.Errorf("marshal profile: %w", err)
 	}
 
-	return os.WriteFile(path, data, 0644)
+	return os.WriteFile(path, data, paths.FilePerm)
 }
 
 // Load loads a profile by name from ~/.shifter/profiles/.
