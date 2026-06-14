@@ -501,14 +501,14 @@ func (m *WizardModel) buildPortAspects() {
 	}
 
 	m.aspects = []aspectItem{
-		{Name: "instructions", Label: "Project Instructions", Selected: true, Count: srcSummary["instructions"]},
-		{Name: "agents", Label: "Agents/Subagents", Selected: true, Count: srcSummary["agents"]},
-		{Name: "skills", Label: "Skills", Selected: true, Count: srcSummary["skills"]},
-		{Name: "commands", Label: "Slash Commands", Selected: true, Count: srcSummary["commands"]},
-		{Name: "mcp", Label: "MCP Servers", Selected: true},
-		{Name: "permissions", Label: "Permissions", Selected: true},
-		{Name: "hooks", Label: "Hooks", Selected: true},
-		{Name: "settings", Label: "Settings", Selected: false},
+		{Name: "instructions", Label: i18n.T("aspect.instructions"), Selected: true, Count: srcSummary["instructions"]},
+		{Name: "agents", Label: i18n.T("aspect.agents"), Selected: true, Count: srcSummary["agents"]},
+		{Name: "skills", Label: i18n.T("aspect.skills"), Selected: true, Count: srcSummary["skills"]},
+		{Name: "commands", Label: i18n.T("aspect.commands"), Selected: true, Count: srcSummary["commands"]},
+		{Name: "mcp", Label: i18n.T("aspect.mcp"), Selected: true},
+		{Name: "permissions", Label: i18n.T("aspect.permissions"), Selected: true},
+		{Name: "hooks", Label: i18n.T("aspect.hooks"), Selected: true},
+		{Name: "settings", Label: i18n.T("aspect.settings"), Selected: false},
 	}
 }
 
@@ -533,19 +533,19 @@ func (m WizardModel) viewCurrentScreen() string {
 	case WizMenu:
 		return m.viewMenu()
 	case WizSaveSelectAgent:
-		return m.viewAgentSelect("💾 Save Profile — Select Agent", "Which agent's config do you want to save?")
+		return m.viewAgentSelect(i18n.T("save.title"), i18n.T("save.subtitle"))
 	case WizSaveName:
 		return m.viewNameInput()
 	case WizPortSelectSource:
-		return m.viewAgentSelect("🔀 Port Config — Select Source", "Which agent's config do you want to port from?")
+		return m.viewAgentSelect(i18n.T("port.title"), i18n.T("port.source_subtitle"))
 	case WizPortSelectTarget:
-		return m.viewAgentSelect("🔀 Port Config — Select Target ("+m.sourceID+")", "Which agent do you want to port to?")
+		return m.viewAgentSelect(i18n.Tf("port.target_title", map[string]string{"source": m.sourceID}), i18n.T("port.target_subtitle"))
 	case WizPortAspects:
 		return m.viewAspectsSelect()
 	case WizLoadSelectProfile:
 		return m.viewProfileSelect()
 	case WizLoadSelectTarget:
-		return m.viewAgentSelect("📥 Load Profile — Select Target", "Which agent do you want to apply this profile to?")
+		return m.viewAgentSelect(i18n.T("load.select_target"), i18n.T("load.target_subtitle"))
 	case WizSettings:
 		return m.viewSettings()
 	}
@@ -556,7 +556,7 @@ func (m WizardModel) viewDone() string {
 	var b strings.Builder
 	b.WriteString(styles.Title.Render(m.doneMsg))
 	b.WriteString("\n\n")
-	b.WriteString(styles.HelpBar.Render("Press Enter or q to quit"))
+	b.WriteString(styles.HelpBar.Render(i18n.T("result.press_quit")))
 	return lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center, b.String())
 }
 
@@ -593,18 +593,18 @@ func (m WizardModel) viewWelcome() string {
 
 func (m WizardModel) viewMenu() string {
 	var b strings.Builder
-	b.WriteString(styles.Title.Render("🔄 Shifter — Interactive Wizard"))
+	b.WriteString(styles.Title.Render("🔄 " + i18n.T("menu.title")))
 	b.WriteString("\n\n")
 
 	agents := m.foundAgents()
 	if len(agents) == 0 {
-		b.WriteString("No configured agents found in this project.\n")
-		b.WriteString("\nRun 'shifter port <source> --to <target>' instead.\n")
-		b.WriteString("\n" + styles.HelpBar.Render("Press q to quit"))
+		b.WriteString(i18n.T("detect.not_configured") + "\n")
+		b.WriteString("\n" + styles.HelpBar.Render("q "+i18n.T("help.quit")))
 		return b.String()
 	}
 
-	b.WriteString(fmt.Sprintf("Found %d configured agent(s):\n", len(agents)))
+	b.WriteString(i18n.Tf("menu.found_agents", map[string]string{"count": fmt.Sprintf("%d", len(agents))}))
+	b.WriteString("\n")
 	for _, a := range agents {
 		b.WriteString(fmt.Sprintf("  ✓ %s", a.Name))
 		for k, v := range a.Summary {
@@ -613,13 +613,13 @@ func (m WizardModel) viewMenu() string {
 		b.WriteString("\n")
 	}
 	b.WriteString("\n")
-	b.WriteString("What would you like to do?\n\n")
+	b.WriteString(i18n.T("menu.what_do") + "\n\n")
 
 	items := []string{
-		"💾 Save — Capture a project's agent config as a reusable profile",
-		"📥 Load — Apply a saved profile to this project",
-		"🔀 Port — Transfer config between two agents in this project",
-		"⚙  Settings — Change language and preferences",
+		i18n.T("menu.save"),
+		i18n.T("menu.load"),
+		i18n.T("menu.port"),
+		"⚙  " + i18n.T("settings.title") + " — Change language and preferences",
 	}
 
 	for i, item := range items {
@@ -632,7 +632,7 @@ func (m WizardModel) viewMenu() string {
 	}
 
 	b.WriteString("\n")
-	b.WriteString(styles.HelpBar.Render("↑↓ navigate • Enter select • q quit"))
+	b.WriteString(styles.HelpBar.Render("↑↓ " + i18n.T("help.navigate") + " • Enter " + i18n.T("help.select") + " • q " + i18n.T("help.quit")))
 	return b.String()
 }
 
@@ -658,7 +658,7 @@ func (m WizardModel) viewAgentSelect(title, subtitle string) string {
 	}
 
 	b.WriteString("\n")
-	b.WriteString(styles.HelpBar.Render("↑↓ navigate • Enter select • esc back"))
+	b.WriteString(styles.HelpBar.Render("↑↓ " + i18n.T("help.navigate") + " • Enter " + i18n.T("help.select") + " • Esc " + i18n.T("help.back")))
 	return b.String()
 }
 
@@ -675,7 +675,7 @@ func (m WizardModel) viewNameInput() string {
 	b.WriteString("\n\n")
 	b.WriteString(styles.MutedText.Render("(letters, numbers, hyphens, underscores)"))
 	b.WriteString("\n\n")
-	b.WriteString(styles.HelpBar.Render("Type name • Enter save • esc back"))
+	b.WriteString(styles.HelpBar.Render(i18n.T("help.type_name")))
 	return b.String()
 }
 
@@ -690,13 +690,13 @@ func (m WizardModel) viewProfileSelect() string {
 	}
 
 	if len(m.profileList) == 0 {
-		b.WriteString("No saved profiles found.\n\n")
+		b.WriteString(i18n.T("load.no_profiles")+"\n\n")
 		b.WriteString("Use '💾 Save' from the main menu to create one.\n")
-		b.WriteString("\n" + styles.HelpBar.Render("esc back"))
+		b.WriteString("\n" + styles.HelpBar.Render("Esc " + i18n.T("help.back")))
 		return b.String()
 	}
 
-	b.WriteString("Select a profile to apply:\n\n")
+	b.WriteString(i18n.T("load.subtitle")+"\n\n")
 
 	for i, p := range m.profileList {
 		line := fmt.Sprintf("%s", p.Name)
@@ -717,7 +717,7 @@ func (m WizardModel) viewProfileSelect() string {
 	}
 
 	b.WriteString("\n")
-	b.WriteString(styles.HelpBar.Render("↑↓ navigate • Enter select • esc back"))
+	b.WriteString(styles.HelpBar.Render("↑↓ " + i18n.T("help.navigate") + " • Enter " + i18n.T("help.select") + " • Esc " + i18n.T("help.back")))
 	return b.String()
 }
 
@@ -751,7 +751,7 @@ func (m WizardModel) viewAspectsSelect() string {
 	var b strings.Builder
 	b.WriteString(styles.Title.Render(fmt.Sprintf("🔀 Port: %s → %s", m.sourceID, m.targetID)))
 	b.WriteString("\n\n")
-	b.WriteString("Select aspects to port:\n\n")
+	b.WriteString(i18n.T("port.aspects_subtitle")+"\n\n")
 
 	for i, a := range m.aspects {
 		checkbox := "[ ]"
@@ -774,6 +774,6 @@ func (m WizardModel) viewAspectsSelect() string {
 	}
 
 	b.WriteString("\n")
-	b.WriteString(styles.HelpBar.Render("↑↓ navigate • space toggle • Enter apply • esc back"))
+	b.WriteString(styles.HelpBar.Render("↑↓ " + i18n.T("help.navigate") + " • Space " + i18n.T("help.toggle") + " • Enter " + i18n.T("help.apply") + " • Esc " + i18n.T("help.back")))
 	return b.String()
 }
