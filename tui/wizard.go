@@ -14,6 +14,8 @@ import (
 	"github.com/moximxxx/shifter/engine/detect"
 	"github.com/moximxxx/shifter/engine/port"
 	"github.com/moximxxx/shifter/engine/profile"
+	"github.com/moximxxx/shifter/pkg/i18n"
+	"github.com/moximxxx/shifter/pkg/settings"
 	"github.com/moximxxx/shifter/registry"
 	"github.com/moximxxx/shifter/tui/styles"
 )
@@ -22,7 +24,8 @@ import (
 type WizardScreen int
 
 const (
-	WizMenu WizardScreen = iota
+	WizWelcome WizardScreen = iota
+	WizMenu
 	WizSaveSelectAgent
 	WizSaveName
 	WizSaveDone
@@ -45,6 +48,10 @@ type WizardModel struct {
 	errorMsg  string
 	loading   bool
 	doneMsg   string
+
+	// First-run
+	isFirstRun bool
+	langChoice int // 0=en, 1=zh
 
 	// Detection
 	detectResults []detect.Result
@@ -71,10 +78,18 @@ type WizardModel struct {
 
 // NewWizardModel creates the interactive wizard.
 func NewWizardModel() WizardModel {
-	return WizardModel{
-		screen:    WizMenu,
+	m := WizardModel{
+		screen:    WizWelcome,
 		cursorIdx: 0,
 	}
+	// Check if first run
+	if settings.IsFirstRun() {
+		m.isFirstRun = true
+	} else {
+		// Skip welcome, go directly to menu
+		m.screen = WizMenu
+	}
+	return m
 }
 
 func (m WizardModel) Init() tea.Cmd {
@@ -127,6 +142,11 @@ func (m WizardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		switch msg.String() {
 		case "ctrl+c", "esc":
+			if m.screen == WizWelcome {
+				// Default to English and quit welcome
+				m.quitting = true
+				return m, tea.Quit
+			}
 			if m.screen == WizMenu {
 				m.quitting = true
 				return m, tea.Quit
@@ -137,16 +157,28 @@ func (m WizardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 
 		case "q":
-			if m.screen == WizMenu || m.screen == WizSaveDone || m.screen == WizLoadDone || m.screen == WizPortDone {
+			if m.screen == WizWelcome || m.screen == WizMenu || m.screen == WizSaveDone || m.screen == WizLoadDone || m.screen == WizPortDone {
 				m.quitting = true
 				return m, tea.Quit
 			}
 
 		case "up", "k":
+			if m.screen == WizWelcome {
+				if m.langChoice > 0 {
+					m.langChoice--
+				}
+				return m, nil
+			}
 			if m.cursorIdx > 0 {
 				m.cursorIdx--
 			}
 		case "down", "j":
+			if m.screen == WizWelcome {
+				if m.langChoice < 1 {
+					m.langChoice++
+				}
+				return m, nil
+			}
 			if m.canMoveDown() {
 				m.cursorIdx++
 			}
@@ -183,6 +215,8 @@ func (m *WizardModel) handleInputMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 func (m *WizardModel) canMoveDown() bool {
 	switch m.screen {
+	case WizWelcome:
+		return m.cursorIdx < 1 // en, zh
 	case WizMenu:
 		return m.cursorIdx < 2 // Save, Load, Port
 	case WizSaveSelectAgent, WizPortSelectSource, WizPortSelectTarget:
@@ -199,6 +233,24 @@ func (m *WizardModel) canMoveDown() bool {
 
 func (m *WizardModel) handleEnter() (tea.Model, tea.Cmd) {
 	switch m.screen {
+	case WizWelcome:
+		// Save language choice
+		lang := "en"
+		if m.langChoice == 1 {
+			lang = "zh"
+		}
+		i18n.SetLang(lang)
+		s, _ := settings.Load()
+		if s != nil {
+			s.Lang = lang
+			s.FirstRun = false
+			settings.Save(s)
+		}
+		m.screen = WizMenu
+		m.cursorIdx = 0
+		m.isFirstRun = false
+		return m, nil
+
 	case WizMenu:
 		switch m.cursorIdx {
 		case 0: // Save
@@ -446,6 +498,8 @@ func (m WizardModel) View() string {
 
 func (m WizardModel) viewCurrentScreen() string {
 	switch m.screen {
+	case WizWelcome:
+		return m.viewWelcome()
 	case WizMenu:
 		return m.viewMenu()
 	case WizSaveSelectAgent:
@@ -472,6 +526,37 @@ func (m WizardModel) viewDone() string {
 	b.WriteString("\n\n")
 	b.WriteString(styles.HelpBar.Render("Press Enter or q to quit"))
 	return lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center, b.String())
+}
+
+func (m WizardModel) viewWelcome() string {
+	var b strings.Builder
+	b.WriteString(styles.Title.Render("🔄 " + i18n.T("welcome.title")))
+	b.WriteString("\n\n")
+	b.WriteString(i18n.T("welcome.select_lang"))
+	b.WriteString("\n\n")
+
+	langs := []string{"English", "简体中文"}
+	for i, name := range langs {
+		prefix := "  "
+		if i == m.langChoice {
+			prefix = "❯ "
+			b.WriteString(styles.ActiveItem.Render(prefix + name))
+		} else {
+			b.WriteString(styles.InactiveItem.Render(prefix + name))
+		}
+		if i == 0 {
+			b.WriteString("  🇺🇸")
+		} else {
+			b.WriteString("  🇨🇳")
+		}
+		b.WriteString("\n")
+	}
+
+	b.WriteString("\n")
+	b.WriteString(styles.MutedText.Render(i18n.T("welcome.later")))
+	b.WriteString("\n\n")
+	b.WriteString(styles.HelpBar.Render("↑↓ " + i18n.T("help.navigate") + " • Enter " + i18n.T("help.select")))
+	return b.String()
 }
 
 func (m WizardModel) viewMenu() string {

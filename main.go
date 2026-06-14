@@ -6,6 +6,8 @@ import (
 	"os"
 
 	"github.com/moximxxx/shifter/cmd"
+	"github.com/moximxxx/shifter/pkg/i18n"
+	"github.com/moximxxx/shifter/pkg/settings"
 )
 
 // Build information — set via ldflags at compile time:
@@ -18,6 +20,14 @@ var (
 )
 
 func main() {
+	// Initialize i18n from user settings
+	s, _ := settings.Load()
+	if s != nil && s.Lang != "" {
+		i18n.Init(s.Lang)
+	} else {
+		i18n.Init("en")
+	}
+
 	// Inject version into root command
 	cmd.SetVersion(fmt.Sprintf("%s (commit: %s, built: %s)", version, commit, date))
 
