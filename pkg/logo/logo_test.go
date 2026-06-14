@@ -13,6 +13,10 @@ func TestRender(t *testing.T) {
 	if len(result) < 100 {
 		t.Errorf("Render output too short: %d chars", len(result))
 	}
+	// Should start with ANSI reset code
+	if !strings.HasPrefix(result, "\033[0m") {
+		t.Error("Render should start with ANSI reset")
+	}
 }
 
 func TestSmall(t *testing.T) {

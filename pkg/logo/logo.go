@@ -1,7 +1,13 @@
 // Package logo provides the Shifter ASCII art logo.
+// All output is explicitly wrapped with ANSI reset to prevent color leaking
+// from surrounding terminal context (e.g., colored install scripts).
 package logo
 
-import "github.com/charmbracelet/lipgloss"
+import (
+	"fmt"
+
+	"github.com/charmbracelet/lipgloss"
+)
 
 const ascii = `
 ███████╗██╗  ██╗██╗███████╗████████╗███████╗██████╗
@@ -11,45 +17,50 @@ const ascii = `
 ███████║██║  ██║██║██║        ██║   ███████╗██║  ██║
 ╚══════╝╚═╝  ╚═╝╚═╝╚═╝        ╚═╝   ╚══════╝╚═╝  ╚═╝`
 
+const logoColor = "#7C3AED" // Shifter purple — matches TUI Primary
+
 var (
-	// Purple gradient for the logo
 	logoStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#7C3AED")).
+			Foreground(lipgloss.Color(logoColor)).
 			Bold(true)
 
-	// Tagline below the logo
 	taglineStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#7C3AED")).
+			Foreground(lipgloss.Color(logoColor)).
 			Italic(true).
 			PaddingLeft(2)
-
-	// Cached rendered logo
-	cached string
 )
 
-const taglineEn = "One-click config porting between coding agents"
-const taglineZh = "一键在不同 Coding Agent 之间迁移配置"
-
-// Render returns the styled logo with optional tagline.
+// Render returns the logo with optional tagline.
+// Always resets terminal colors first to prevent leaking from context.
 func Render(tagline string) string {
-	if cached != "" && tagline == "" {
-		return cached
-	}
+	reset := "\033[0m"
+	logo := logoStyle.Render(ascii)
 	if tagline == "" {
-		cached = logoStyle.Render(ascii)
-		return cached
+		return reset + logo + reset
 	}
-	result := logoStyle.Render(ascii) + "\n" + taglineStyle.Render(tagline)
-	if tagline == "" {
-		cached = result
-	}
-	return result
+	return reset + logo + "\n" + taglineStyle.Render(tagline) + reset
 }
 
-// Small returns a compact one-line brand name.
+// Version returns the logo with version string in purple.
+func Version(version string) string {
+	reset := "\033[0m"
+	logo := logoStyle.Render(ascii)
+	verStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color(logoColor)).
+		Bold(true).
+		Render(version)
+	return reset + logo + "\n" + verStyle + reset
+}
+
+// Small returns a compact one-line brand name in purple.
 func Small() string {
 	return lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#7C3AED")).
+		Foreground(lipgloss.Color(logoColor)).
 		Bold(true).
-		Render("🔄 Shifter")
+		Render("\033[0m🔄 Shifter")
+}
+
+// RenderString is like Render but uses fmt.Sprintf for the tagline.
+func RenderString(format string, args ...interface{}) string {
+	return Render(fmt.Sprintf(format, args...))
 }

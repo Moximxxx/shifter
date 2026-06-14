@@ -119,8 +119,8 @@ main() {
 
     # Verify
     if command -v "$BINARY" >/dev/null 2>&1; then
-        installed_version=$("$BINARY" --version 2>/dev/null || echo "ok")
-        success "Installation verified: $installed_version"
+        printf "${MAGENTA}✓${NC} Installed version:\n"
+        "$BINARY" --version 2>/dev/null || true
     else
         warn "Binary installed but not in PATH"
         info "Add to PATH: export PATH=\"$INSTALL_DIR:\$PATH\""
