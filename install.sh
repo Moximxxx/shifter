@@ -14,7 +14,7 @@ set -e
 
 # --- Configuration ---
 REPO="Moximxxx/shifter"
-DEFAULT_VERSION="0.1.0"
+DEFAULT_VERSION="0.1.1"
 VERSION="${VERSION:-$DEFAULT_VERSION}"
 INSTALL_DIR="${INSTALL_DIR:-/usr/local/bin}"
 BINARY="shifter"
