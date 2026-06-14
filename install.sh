@@ -110,12 +110,13 @@ main() {
     # Install
     if [ -w "$INSTALL_DIR" ]; then
         cp "$EXTRACTED_BIN" "$INSTALL_DIR/$BINARY"
+        chmod +x "$INSTALL_DIR/$BINARY"
     else
         info "Need sudo to install to $INSTALL_DIR"
         sudo cp "$EXTRACTED_BIN" "$INSTALL_DIR/$BINARY"
+        sudo chmod +x "$INSTALL_DIR/$BINARY"
     fi
 
-    chmod +x "$INSTALL_DIR/$BINARY"
     success "Installed to $INSTALL_DIR/$BINARY"
 
     # Verify
