@@ -11,9 +11,7 @@ import (
 
 func TestSave_Load(t *testing.T) {
 	tmpDir := t.TempDir()
-	oldHome := os.Getenv("HOME")
-	os.Setenv("HOME", tmpDir)
-	defer os.Setenv("HOME", oldHome)
+	t.Setenv("HOME", tmpDir)
 
 	p := Profile{
 		Name:        "test-profile",
@@ -55,9 +53,7 @@ func TestSave_Load(t *testing.T) {
 
 func TestLoad_NotFound(t *testing.T) {
 	tmpDir := t.TempDir()
-	oldHome := os.Getenv("HOME")
-	os.Setenv("HOME", tmpDir)
-	defer os.Setenv("HOME", oldHome)
+	t.Setenv("HOME", tmpDir)
 
 	_, err := Load("nonexistent-profile")
 	if err == nil {
@@ -67,9 +63,7 @@ func TestLoad_NotFound(t *testing.T) {
 
 func TestList(t *testing.T) {
 	tmpDir := t.TempDir()
-	oldHome := os.Getenv("HOME")
-	os.Setenv("HOME", tmpDir)
-	defer os.Setenv("HOME", oldHome)
+	t.Setenv("HOME", tmpDir)
 
 	for _, name := range []string{"profile-a", "profile-b"} {
 		Save(Profile{Name: name, SourceAgent: "claude-code", Config: &canonical.ShifterConfig{}})
@@ -86,9 +80,7 @@ func TestList(t *testing.T) {
 
 func TestDelete(t *testing.T) {
 	tmpDir := t.TempDir()
-	oldHome := os.Getenv("HOME")
-	os.Setenv("HOME", tmpDir)
-	defer os.Setenv("HOME", oldHome)
+	t.Setenv("HOME", tmpDir)
 
 	Save(Profile{Name: "to-delete", Config: &canonical.ShifterConfig{}})
 

@@ -13,9 +13,7 @@ func TestLoad_Defaults(t *testing.T) {
 	mu.Unlock()
 
 	// Point to a non-existent path
-	oldHome := os.Getenv("HOME")
-	os.Setenv("HOME", "/tmp/shifter-test-nonexistent")
-	defer os.Setenv("HOME", oldHome)
+	t.Setenv("HOME", "/tmp/shifter-test-nonexistent")
 
 	s, err := Load()
 	if err != nil {
@@ -39,9 +37,7 @@ func TestSave_Load_RoundTrip(t *testing.T) {
 	os.MkdirAll(configDir, 0755)
 
 	// Override home for test
-	oldHome := os.Getenv("HOME")
-	os.Setenv("HOME", tmpDir)
-	defer os.Setenv("HOME", oldHome)
+	t.Setenv("HOME", tmpDir)
 
 	s := &UserSettings{Lang: "zh", FirstRun: false}
 	if err := Save(s); err != nil {
@@ -77,9 +73,7 @@ func TestIsFirstRun(t *testing.T) {
 	mu.Unlock()
 
 	tmpDir := t.TempDir()
-	oldHome := os.Getenv("HOME")
-	os.Setenv("HOME", tmpDir)
-	defer os.Setenv("HOME", oldHome)
+	t.Setenv("HOME", tmpDir)
 
 	if !IsFirstRun() {
 		t.Error("should be first run in empty dir")
@@ -99,9 +93,7 @@ func TestIsFirstRun(t *testing.T) {
 func TestSave_InvalidPath(t *testing.T) {
 	// MustHomeDir falls back to /tmp, so Save will always succeed
 	// The error path is now handled gracefully by the fallback
-	oldHome := os.Getenv("HOME")
-	os.Setenv("HOME", "/does/not/exist/anywhere")
-	defer os.Setenv("HOME", oldHome)
+	t.Setenv("HOME", "/does/not/exist/anywhere")
 
 	mu.Lock()
 	cached = nil
@@ -129,9 +121,7 @@ func TestCaching(t *testing.T) {
 	mu.Unlock()
 
 	tmpDir := t.TempDir()
-	oldHome := os.Getenv("HOME")
-	os.Setenv("HOME", tmpDir)
-	defer os.Setenv("HOME", oldHome)
+	t.Setenv("HOME", tmpDir)
 
 	Save(&UserSettings{Lang: "zh", FirstRun: false})
 

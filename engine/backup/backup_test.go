@@ -8,9 +8,7 @@ import (
 
 func TestCreateAndList(t *testing.T) {
 	tmpDir := t.TempDir()
-	oldHome := os.Getenv("HOME")
-	os.Setenv("HOME", tmpDir)
-	defer os.Setenv("HOME", oldHome)
+	t.Setenv("HOME", tmpDir)
 
 	// Create a test file to back up
 	testFile := filepath.Join(tmpDir, "test.txt")
@@ -38,9 +36,7 @@ func TestCreateAndList(t *testing.T) {
 
 func TestRestore(t *testing.T) {
 	tmpDir := t.TempDir()
-	oldHome := os.Getenv("HOME")
-	os.Setenv("HOME", tmpDir)
-	defer os.Setenv("HOME", oldHome)
+	t.Setenv("HOME", tmpDir)
 
 	// Create file to back up
 	testFile := filepath.Join(tmpDir, "restore-test.txt")
@@ -70,9 +66,7 @@ func TestRestore(t *testing.T) {
 
 func TestCreate_NonExistentFile(t *testing.T) {
 	tmpDir := t.TempDir()
-	oldHome := os.Getenv("HOME")
-	os.Setenv("HOME", tmpDir)
-	defer os.Setenv("HOME", oldHome)
+	t.Setenv("HOME", tmpDir)
 
 	// Create with a non-existent file — should not error, just skip
 	_, err := Create([]string{"/tmp/nonexistent-file-12345.xyz"})
@@ -83,9 +77,7 @@ func TestCreate_NonExistentFile(t *testing.T) {
 
 func TestLatest_Empty(t *testing.T) {
 	tmpDir := t.TempDir()
-	oldHome := os.Getenv("HOME")
-	os.Setenv("HOME", tmpDir)
-	defer os.Setenv("HOME", oldHome)
+	t.Setenv("HOME", tmpDir)
 
 	path, err := Latest()
 	if err != nil {
