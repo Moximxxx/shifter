@@ -107,6 +107,23 @@ func init() {
 	rootCmd.AddCommand(detectCmd)
 }
 
+// Version info
+var versionInfo string
+
+// SetVersion sets the version string (called from main with ldflags).
+func SetVersion(v string) {
+	versionInfo = v
+	rootCmd.Version = v
+}
+
+// VersionString returns the current version.
+func VersionString() string {
+	if versionInfo == "" {
+		return "dev"
+	}
+	return versionInfo
+}
+
 // Execute runs the root command.
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
