@@ -27,7 +27,7 @@ MAGENTA='\033[0;35m'
 NC='\033[0m'
 
 # --- Helpers ---
-info()    { printf "→ %s\n" "$1"; }
+info()    { printf "${MAGENTA}→ %s${NC}\n" "$1"; }
 success() { printf "${GREEN}✓ %s${NC}\n" "$1"; }
 warn()    { printf "${YELLOW}⚠ %s${NC}\n" "$1"; }
 error()   { printf "${RED}✗ %s${NC}\n" "$1"; exit 1; }
@@ -60,11 +60,6 @@ main() {
 ╚══════╝╚═╝  ╚═╝╚═╝╚═╝        ╚═╝   ╚══════╝╚═╝  ╚═╝
 SHIFTER_LOGO
     printf "${NC}\n"
-    printf "${MAGENTA}╔══════════════════════════════════════╗${NC}\n"
-    printf "${MAGENTA}║       Shifter Installer v${VERSION}       ║${NC}\n"
-    printf "${MAGENTA}║  Cross-agent config migration tool  ║${NC}\n"
-    printf "${MAGENTA}╚══════════════════════════════════════╝${NC}\n"
-    echo ""
 
     # Clean up old installations that might shadow the new one
     info "Installing Shifter v${VERSION}..."
