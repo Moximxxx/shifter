@@ -56,7 +56,8 @@ main() {
     printf "${CYAN}╚══════════════════════════════════════╝${NC}\n"
     echo ""
 
-    # Check for existing installation
+    # Check for existing installation and clean up old paths
+    NEED_UPGRADE=false
     if command -v "$BINARY" >/dev/null 2>&1; then
         existing_version=$("$BINARY" --version 2>/dev/null || echo "unknown")
         info "Found existing installation: $existing_version"
@@ -64,6 +65,17 @@ main() {
             success "Already up to date"
             exit 0
         fi
+        NEED_UPGRADE=true
+        # Remove old installations that might shadow the new one
+        OLD_PATHS="$HOME/.local/bin/$BINARY $HOME/go/bin/$BINARY"
+        for old in $OLD_PATHS; do
+            if [ -f "$old" ]; then
+                warn "Removing old installation: $old"
+                rm -f "$old"
+            fi
+        done
+    fi
+    if $NEED_UPGRADE; then
         info "Upgrading to v${VERSION}..."
     fi
 
