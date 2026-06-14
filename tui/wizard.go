@@ -571,7 +571,7 @@ func (m WizardModel) viewWelcome() string {
 	var b strings.Builder
 	b.WriteString(logo.Render(""))
 	b.WriteString("\n")
-	b.WriteString(styles.MutedText.Render("v" + tuiVersion))
+	b.WriteString(styles.MutedText.Render(tuiVersion))
 	b.WriteString("\n\n")
 	b.WriteString(styles.Title.Render("🔄 " + i18n.T("welcome.title")))
 	b.WriteString("\n\n")
@@ -606,7 +606,7 @@ func (m WizardModel) viewMenu() string {
 	var b strings.Builder
 	b.WriteString(logo.Render(""))
 	b.WriteString("\n")
-	b.WriteString(styles.MutedText.Render("v" + tuiVersion))
+	b.WriteString(styles.MutedText.Render(tuiVersion))
 	b.WriteString("\n\n")
 	b.WriteString(styles.Title.Render("🔄 " + i18n.T("menu.title")))
 	b.WriteString("\n\n")

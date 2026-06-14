@@ -8,6 +8,7 @@ import (
 	"os"
 	"strings"
 
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
 
 	"github.com/moximxxx/shifter/engine/detect"
@@ -159,6 +160,16 @@ func VersionString() string {
 		return "dev"
 	}
 	return versionInfo
+}
+
+// LaunchTUI starts the interactive TUI directly (no cobra).
+func LaunchTUI() {
+	m := tui.NewWizardModel()
+	p := tea.NewProgram(m, tea.WithAltScreen())
+	if _, err := p.Run(); err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		os.Exit(1)
+	}
 }
 
 // Execute runs the root command.

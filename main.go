@@ -29,19 +29,24 @@ func main() {
 		i18n.Init("en")
 	}
 
-	// Inject version into root command
-	cmd.SetVersion(fmt.Sprintf("%s (commit: %s, built: %s)", version, commit, date))
+	// Compact version format: v0.2.1(2230e1c)
+	ver := fmt.Sprintf("v%s(%s)", version, commit)
+	if version == "dev" {
+		ver = "dev"
+	}
+	cmd.SetVersion(ver)
 
 	// Handle --version / -v
 	if len(os.Args) > 1 && (os.Args[1] == "--version" || os.Args[1] == "-v") {
 		fmt.Println(logo.Render(""))
-		fmt.Printf("v%s\n\n", cmd.VersionString())
+		fmt.Println(ver)
 		os.Exit(0)
 	}
 
-	// Show logo when no args or only --help
-	if len(os.Args) <= 1 || os.Args[1] == "--help" || os.Args[1] == "-h" {
-		fmt.Fprintln(os.Stderr, logo.Render(i18n.T("app.tagline")))
+	// No arguments → launch interactive TUI
+	if len(os.Args) <= 1 {
+		cmd.LaunchTUI()
+		return
 	}
 
 	cmd.Execute()
