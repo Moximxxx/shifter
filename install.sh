@@ -1,20 +1,20 @@
 #!/bin/sh
 # ============================================================================
 # Shifter Install Script
-# Version: 0.1.0
+# Version: 1.0.0
 #
 # One-liner installation:
 #   curl -fsSL https://raw.githubusercontent.com/Moximxxx/shifter/release/install.sh | sh
 #
 # Or with a specific version:
-#   curl -fsSL https://raw.githubusercontent.com/Moximxxx/shifter/release/install.sh | VERSION=0.1.0 sh
+#   curl -fsSL https://raw.githubusercontent.com/Moximxxx/shifter/release/install.sh | VERSION=1.0.0 sh
 # ============================================================================
 
 set -e
 
 # --- Configuration ---
 REPO="Moximxxx/shifter"
-DEFAULT_VERSION="0.1.1"
+DEFAULT_VERSION="1.0.0"
 VERSION="${VERSION:-$DEFAULT_VERSION}"
 INSTALL_DIR="${INSTALL_DIR:-/usr/local/bin}"
 BINARY="shifter"
@@ -24,7 +24,7 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 CYAN='\033[0;36m'
-NC='\033[0m' # No Color
+NC='\033[0m'
 
 # --- Helpers ---
 info()    { printf "${CYAN}→ %s${NC}\n" "$1"; }
@@ -34,20 +34,16 @@ error()   { printf "${RED}✗ %s${NC}\n" "$1"; exit 1; }
 
 # --- Platform Detection ---
 detect_platform() {
-    local os arch
-
     case "$(uname -s)" in
         Linux)  os="linux" ;;
         Darwin) os="darwin" ;;
         *)      error "Unsupported OS: $(uname -s)" ;;
     esac
-
     case "$(uname -m)" in
         x86_64|amd64) arch="amd64" ;;
         arm64|aarch64) arch="arm64" ;;
         *) error "Unsupported architecture: $(uname -m)" ;;
     esac
-
     echo "${os}-${arch}"
 }
 
@@ -64,11 +60,11 @@ main() {
     if command -v "$BINARY" >/dev/null 2>&1; then
         existing_version=$("$BINARY" --version 2>/dev/null || echo "unknown")
         info "Found existing installation: $existing_version"
-        if [ "$existing_version" = "shifter version $VERSION" ]; then
-            success "Already up to date (v$VERSION)"
+        if echo "$existing_version" | grep -q "v${VERSION}"; then
+            success "Already up to date"
             exit 0
         fi
-        info "Upgrading to v$VERSION..."
+        info "Upgrading to v${VERSION}..."
     fi
 
     PLATFORM=$(detect_platform)
@@ -101,16 +97,22 @@ main() {
         return
     fi
 
-    # Extract
+    # Extract (tar contains shifter-<platform> binary)
     info "Extracting..."
     tar -xzf "$TMP_DIR/$ARCHIVE" -C "$TMP_DIR"
 
+    # Find the extracted binary (named shifter-<platform>)
+    EXTRACTED_BIN=$(find "$TMP_DIR" -name "shifter-*" -type f | head -1)
+    if [ -z "$EXTRACTED_BIN" ]; then
+        error "Binary not found in archive"
+    fi
+
     # Install
     if [ -w "$INSTALL_DIR" ]; then
-        cp "$TMP_DIR/$BINARY" "$INSTALL_DIR/"
+        cp "$EXTRACTED_BIN" "$INSTALL_DIR/$BINARY"
     else
         info "Need sudo to install to $INSTALL_DIR"
-        sudo cp "$TMP_DIR/$BINARY" "$INSTALL_DIR/"
+        sudo cp "$EXTRACTED_BIN" "$INSTALL_DIR/$BINARY"
     fi
 
     chmod +x "$INSTALL_DIR/$BINARY"
