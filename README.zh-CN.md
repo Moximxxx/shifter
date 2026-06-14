@@ -42,17 +42,11 @@ shifter port        # 成了
 
 ```mermaid
 flowchart LR
-    A[Claude Code<br>.claude/] -->|Read| B[(Shifter Canonical<br>JSON)]
-    C[OpenCode<br>opencode.jsonc] -->|Read| B
-    D[Qoder<br>.qoder/] -->|Read| B
-    E[... 7 agents] -->|Read| B
-    B -->|Write| F[Codex CLI<br>.codex/]
-    B -->|Write| G[OpenCode<br>opencode.jsonc]
-    B -->|Write| H[Qoder<br>.qoder/]
-    B -->|Write| I[... any target]
+    A[源 Agent] -->|Read| B[(Canonical JSON)]
+    B -->|Write| C[目标 Agent]
 ```
 
-读取原生配置 → 通用 JSON 中间格式 → 写入任意目标 Agent。语义映射处理格式差异，不能迁移的功能生成明确警告。
+读取原生配置 → 通用 JSON → 写入目标 Agent。语义映射处理格式差异，不能迁移的功能生成明确警告。
 
 ## 功能
 
@@ -101,36 +95,17 @@ shifter ui                            # 交互式 TUI 向导
 
 ```mermaid
 flowchart TB
-    subgraph Parsing[解析中心]
-        CC[Claude Code<br>.claude/]
-        CX[Codex CLI<br>.codex/]
-        OC[OpenCode<br>opencode.jsonc]
-        QD[Qoder<br>.qoder/]
+    subgraph 适配器
+        A1[Claude Code]
+        A2[Codex]
+        A3[OpenCode]
+        A4[Qoder]
     end
-
-    subgraph Core[Shifter 核心]
-        CAN[(Canonical JSON<br>私有格式)]
-        REG[适配器工厂<br>registry/]
-        ENG[业务引擎<br>port/sync/detect/backup]
+    subgraph 核心
+        Fmt[(Canonical JSON)]
     end
-
-    subgraph Target[目标 Agent]
-        TCX[Codex CLI]
-        TOC[OpenCode]
-        TQD[Qoder]
-        TCC[Claude Code]
-    end
-
-    CC -->|Read| CAN
-    CX -->|Read| CAN
-    OC -->|Read| CAN
-    QD -->|Read| CAN
-    CAN --> REG
-    REG -->|Write| TCX
-    REG -->|Write| TOC
-    REG -->|Write| TQD
-    REG -->|Write| TCC
-    ENG --> CAN
+    适配器 -->|Read| Fmt
+    Fmt -->|Write| 适配器
 ```
 
 添加新 Agent：实现 `AgentAdapter`（Read + Write），注册到 `registry/`，完成。

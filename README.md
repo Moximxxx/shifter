@@ -42,17 +42,11 @@ shifter port        # that's it
 
 ```mermaid
 flowchart LR
-    A[Claude Code<br>.claude/] -->|Read| B[(Shifter Canonical<br>JSON)]
-    C[OpenCode<br>opencode.jsonc] -->|Read| B
-    D[Qoder<br>.qoder/] -->|Read| B
-    E[... 7 agents] -->|Read| B
-    B -->|Write| F[Codex CLI<br>.codex/]
-    B -->|Write| G[OpenCode<br>opencode.jsonc]
-    B -->|Write| H[Qoder<br>.qoder/]
-    B -->|Write| I[... any target]
+    A[Source Agent] -->|Read| B[(Canonical JSON)]
+    B -->|Write| C[Target Agent]
 ```
 
-Read native config → universal canonical JSON → write to any target agent. Semantic mapping handles format gaps; incompatible features generate clear severity-leveled warnings.
+Read native config → canonical JSON → write to target. Semantic mapping handles format gaps with clear loss warnings.
 
 ## Features
 
@@ -101,39 +95,23 @@ shifter ui                            # interactive TUI wizard
 
 ```mermaid
 flowchart TB
-    subgraph Parsing[Parsing Center]
-        CC[Claude Code<br>.claude/]
-        CX[Codex CLI<br>.codex/]
-        OC[OpenCode<br>opencode.jsonc]
-        QD[Qoder<br>.qoder/]
+    subgraph Adapters[Adapters]
+        A1[Claude Code]
+        A2[Codex]
+        A3[OpenCode]
+        A4[Qoder]
+        A5[...]
     end
-
     subgraph Core[Shifter Core]
-        CAN[(Canonical JSON<br>Private Format)]
-        REG[Adapter Factory<br>registry/]
-        ENG[Business Engines<br>port/sync/detect/backup]
+        Fmt[(Canonical JSON)]
+        Reg[Adapter Factory]
     end
-
-    subgraph Target[Target Agents]
-        TCX[Codex CLI]
-        TOC[OpenCode]
-        TQD[Qoder]
-        TCC[Claude Code]
-    end
-
-    CC -->|Read| CAN
-    CX -->|Read| CAN
-    OC -->|Read| CAN
-    QD -->|Read| CAN
-    CAN --> REG
-    REG -->|Write| TCX
-    REG -->|Write| TOC
-    REG -->|Write| TQD
-    REG -->|Write| TCC
-    ENG --> CAN
+    Adapters -->|Read| Fmt
+    Fmt --> Reg
+    Reg -->|Write| Adapters
 ```
 
-Adding a new agent: implement `AgentAdapter` (Read + Write), register in `registry/`, done.
+Add an agent: implement `AgentAdapter` (Read + Write), register in `registry/`, done.
 
 ## Environment Variables
 
