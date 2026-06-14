@@ -9,6 +9,7 @@ import (
 
 	"github.com/moximxxx/shifter/adapter"
 	"github.com/moximxxx/shifter/canonical"
+	"github.com/moximxxx/shifter/pkg/convert"
 	"github.com/moximxxx/shifter/pkg/paths"
 )
 
@@ -197,41 +198,20 @@ func (a *Adapter) Write(ctx context.Context, cfg *canonical.ShifterConfig, opts 
 
 	// If there are agents/skills/commands that Aider can't natively support, warn
 	if len(cfg.Agents) > 0 {
-		result.LossWarnings = append(result.LossWarnings, canonical.LossWarning{
-			Feature:     "agents",
-			Field:       "agents",
-			SourceAgent: cfg.Meta.SourceAdapter,
-			TargetAgent: a.ID(),
-			Reason:      "Aider has no subagent system; agent definitions dropped",
-			Severity:    "warning",
-		})
+		result.LossWarnings = append(result.LossWarnings, convert.NewLossWarning("agents", cfg.Meta.SourceAdapter, a.ID(), "Aider has no subagent system; agent definitions dropped", "warning"))
+
 	}
 	if len(cfg.Skills) > 0 {
-		result.LossWarnings = append(result.LossWarnings, canonical.LossWarning{
-			Feature:     "skills",
-			SourceAgent: cfg.Meta.SourceAdapter,
-			TargetAgent: a.ID(),
-			Reason:      "Aider has no skill system; use CONVENTIONS.md instead",
-			Severity:    "info",
-		})
+		result.LossWarnings = append(result.LossWarnings, convert.NewLossWarning("skills", cfg.Meta.SourceAdapter, a.ID(), "Aider has no skill system; use CONVENTIONS.md instead", "info"))
+
 	}
 	if len(cfg.Commands) > 0 {
-		result.LossWarnings = append(result.LossWarnings, canonical.LossWarning{
-			Feature:     "commands",
-			SourceAgent: cfg.Meta.SourceAdapter,
-			TargetAgent: a.ID(),
-			Reason:      "Aider has no slash command system",
-			Severity:    "info",
-		})
+		result.LossWarnings = append(result.LossWarnings, convert.NewLossWarning("commands", cfg.Meta.SourceAdapter, a.ID(), "Aider has no slash command system", "info"))
+
 	}
 	if len(cfg.MCPServers) > 0 {
-		result.LossWarnings = append(result.LossWarnings, canonical.LossWarning{
-			Feature:     "mcp",
-			SourceAgent: cfg.Meta.SourceAdapter,
-			TargetAgent: a.ID(),
-			Reason:      "Aider has no native MCP support",
-			Severity:    "warning",
-		})
+		result.LossWarnings = append(result.LossWarnings, convert.NewLossWarning("mcp", cfg.Meta.SourceAdapter, a.ID(), "Aider has no native MCP support", "warning"))
+
 	}
 
 	var configPath string

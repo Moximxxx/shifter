@@ -17,6 +17,7 @@ import (
 
 	"github.com/moximxxx/shifter/adapter"
 	"github.com/moximxxx/shifter/canonical"
+	"github.com/moximxxx/shifter/pkg/convert"
 	"github.com/moximxxx/shifter/pkg/paths"
 )
 
@@ -263,14 +264,8 @@ func (a *Adapter) Write(ctx context.Context, cfg *canonical.ShifterConfig, opts 
 			}
 		}
 		result.FilesWritten = append(result.FilesWritten, codexMDPath)
-		result.LossWarnings = append(result.LossWarnings, canonical.LossWarning{
-			Feature:     "commands",
-			Field:       "slash commands",
-			SourceAgent: cfg.Meta.SourceAdapter,
-			TargetAgent: a.ID(),
-			Reason:      "Codex has no native slash commands; embedded as instructions in codex.md",
-			Severity:    "info",
-		})
+		result.LossWarnings = append(result.LossWarnings, convert.NewLossWarning("commands", cfg.Meta.SourceAdapter, a.ID(), "Codex has no native slash commands; embedded as instructions in codex.md", "info"))
+
 	}
 
 	return result, nil

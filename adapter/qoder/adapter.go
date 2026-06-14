@@ -10,6 +10,7 @@ import (
 
 	"github.com/moximxxx/shifter/adapter"
 	"github.com/moximxxx/shifter/canonical"
+	"github.com/moximxxx/shifter/pkg/convert"
 	"github.com/moximxxx/shifter/pkg/format"
 	"github.com/moximxxx/shifter/pkg/paths"
 	"gopkg.in/yaml.v3"
@@ -257,22 +258,12 @@ func (a *Adapter) Write(ctx context.Context, cfg *canonical.ShifterConfig, opts 
 
 	// Loss warnings
 	if len(cfg.Commands) > 0 {
-		result.LossWarnings = append(result.LossWarnings, canonical.LossWarning{
-			Feature:     "commands",
-			SourceAgent: cfg.Meta.SourceAdapter,
-			TargetAgent: a.ID(),
-			Reason:      "Qoder has no slash command system",
-			Severity:    "info",
-		})
+		result.LossWarnings = append(result.LossWarnings, convert.NewLossWarning("commands", cfg.Meta.SourceAdapter, a.ID(), "Qoder has no slash command system", "info"))
+
 	}
 	if len(cfg.Hooks) > 0 {
-		result.LossWarnings = append(result.LossWarnings, canonical.LossWarning{
-			Feature:     "hooks",
-			SourceAgent: cfg.Meta.SourceAdapter,
-			TargetAgent: a.ID(),
-			Reason:      "Qoder has no hook system",
-			Severity:    "warning",
-		})
+		result.LossWarnings = append(result.LossWarnings, convert.NewLossWarning("hooks", cfg.Meta.SourceAdapter, a.ID(), "Qoder has no hook system", "warning"))
+
 	}
 
 	return result, nil

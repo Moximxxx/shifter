@@ -8,6 +8,7 @@ import (
 
 	"github.com/moximxxx/shifter/adapter"
 	"github.com/moximxxx/shifter/canonical"
+	"github.com/moximxxx/shifter/pkg/convert"
 )
 
 type Adapter struct{}
@@ -180,13 +181,8 @@ func (a *Adapter) Write(ctx context.Context, cfg *canonical.ShifterConfig, opts 
 			os.WriteFile(p, []byte(b.String()), 0644)
 		}
 		result.FilesWritten = append(result.FilesWritten, p)
-		result.LossWarnings = append(result.LossWarnings, canonical.LossWarning{
-			Feature:     "agents",
-			SourceAgent: cfg.Meta.SourceAdapter,
-			TargetAgent: a.ID(),
-			Reason:      "Cline has no subagent system; agent definitions saved as .clinerules/imported-agents.md",
-			Severity:    "warning",
-		})
+		result.LossWarnings = append(result.LossWarnings, convert.NewLossWarning("agents", cfg.Meta.SourceAdapter, a.ID(), "Cline has no subagent system; agent definitions saved as .clinerules/imported-agents.md", "warning"))
+
 	}
 
 	return result, nil
