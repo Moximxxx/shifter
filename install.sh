@@ -69,12 +69,14 @@ SHIFTER_LOGO
     mkdir -p "$INSTALL_DIR"
 
     info "Installing Shifter v${VERSION}..."
-    # Clean up old installations
-    for old in "$HOME/.local/bin/$BINARY" "$HOME/go/bin/$BINARY" "/usr/local/bin/$BINARY"; do
-        if [ -f "$old" ] && [ "$old" != "$INSTALL_DIR/$BINARY" ]; then
-            rm -f "$old"
-        fi
+    # Clean up old installations (ignore permission errors)
+    for old in "$HOME/.local/bin/$BINARY" "$HOME/go/bin/$BINARY"; do
+        rm -f "$old" 2>/dev/null || true
     done
+    # /usr/local/bin needs sudo — skip if not writable
+    if [ -f "/usr/local/bin/$BINARY" ] && [ -w "/usr/local/bin/$BINARY" ]; then
+        rm -f "/usr/local/bin/$BINARY"
+    fi
 
     PLATFORM=$(detect_platform)
     ARCHIVE="shifter_${VERSION}_${PLATFORM}.tar.gz"
