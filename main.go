@@ -7,7 +7,6 @@ import (
 
 	"github.com/moximxxx/shifter/cmd"
 	"github.com/moximxxx/shifter/pkg/i18n"
-	"github.com/moximxxx/shifter/pkg/logo"
 	"github.com/moximxxx/shifter/pkg/settings"
 )
 
@@ -38,7 +37,6 @@ func main() {
 
 	// Handle --version / -v
 	if len(os.Args) > 1 && (os.Args[1] == "--version" || os.Args[1] == "-v") {
-		fmt.Println(logo.Render(""))
 		fmt.Println(ver)
 		os.Exit(0)
 	}

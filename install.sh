@@ -50,6 +50,16 @@ detect_platform() {
 # --- Main ---
 main() {
     echo ""
+    printf "${MAGENTA}"
+    cat << 'SHIFTER_LOGO'
+███████╗██╗  ██╗██╗███████╗████████╗███████╗██████╗
+██╔════╝██║  ██║██║██╔════╝╚══██╔══╝██╔════╝██╔══██╗
+███████╗███████║██║█████╗     ██║   █████╗  ██████╔╝
+╚════██║██╔══██║██║██╔══╝     ██║   ██╔══╝  ██╔══██╗
+███████║██║  ██║██║██║        ██║   ███████╗██║  ██║
+╚══════╝╚═╝  ╚═╝╚═╝╚═╝        ╚═╝   ╚══════╝╚═╝  ╚═╝
+SHIFTER_LOGO
+    printf "${NC}\n"
     printf "${MAGENTA}╔══════════════════════════════════════╗${NC}\n"
     printf "${MAGENTA}║       Shifter Installer v${VERSION}       ║${NC}\n"
     printf "${MAGENTA}║  Cross-agent config migration tool  ║${NC}\n"
