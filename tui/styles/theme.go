@@ -43,15 +43,13 @@ var (
 	MutedText = lipgloss.NewStyle().
 		Foreground(Muted)
 
-	// Active item
+	// Active item — cursor indicator
 	ActiveItem = lipgloss.NewStyle().
 		Foreground(Primary).
-		Bold(true).
-		PaddingLeft(2)
+		Bold(true)
 
-	// Inactive item
-	InactiveItem = lipgloss.NewStyle().
-		PaddingLeft(4)
+	// Inactive item — same padding as active to prevent cursor jump
+	InactiveItem = lipgloss.NewStyle()
 
 	// Border
 	Border = lipgloss.NewStyle().

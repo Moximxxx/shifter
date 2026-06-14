@@ -587,7 +587,7 @@ func (m WizardModel) viewWelcome() string {
 	b.WriteString("\n")
 	b.WriteString(styles.MutedText.Render(i18n.T("welcome.later")))
 	b.WriteString("\n\n")
-	b.WriteString(styles.HelpBar.Render("↑↓ " + i18n.T("help.navigate") + " • Enter " + i18n.T("help.select")))
+	b.WriteString(styles.HelpBar.Render(i18n.T("help.navigate") + " • " + i18n.T("help.select")))
 	return b.String()
 }
 
@@ -599,7 +599,7 @@ func (m WizardModel) viewMenu() string {
 	agents := m.foundAgents()
 	if len(agents) == 0 {
 		b.WriteString(i18n.T("detect.not_configured") + "\n")
-		b.WriteString("\n" + styles.HelpBar.Render("q "+i18n.T("help.quit")))
+		b.WriteString("\n" + styles.HelpBar.Render(i18n.T("help.quit")))
 		return b.String()
 	}
 
@@ -632,7 +632,7 @@ func (m WizardModel) viewMenu() string {
 	}
 
 	b.WriteString("\n")
-	b.WriteString(styles.HelpBar.Render("↑↓ " + i18n.T("help.navigate") + " • Enter " + i18n.T("help.select") + " • q " + i18n.T("help.quit")))
+	b.WriteString(styles.HelpBar.Render(i18n.T("help.navigate") + " • " + i18n.T("help.select") + " • " + i18n.T("help.quit")))
 	return b.String()
 }
 
@@ -658,7 +658,7 @@ func (m WizardModel) viewAgentSelect(title, subtitle string) string {
 	}
 
 	b.WriteString("\n")
-	b.WriteString(styles.HelpBar.Render("↑↓ " + i18n.T("help.navigate") + " • Enter " + i18n.T("help.select") + " • Esc " + i18n.T("help.back")))
+	b.WriteString(styles.HelpBar.Render(i18n.T("help.navigate") + " • " + i18n.T("help.select") + " • " + i18n.T("help.back")))
 	return b.String()
 }
 
@@ -692,7 +692,7 @@ func (m WizardModel) viewProfileSelect() string {
 	if len(m.profileList) == 0 {
 		b.WriteString(i18n.T("load.no_profiles")+"\n\n")
 		b.WriteString("Use '💾 Save' from the main menu to create one.\n")
-		b.WriteString("\n" + styles.HelpBar.Render("Esc " + i18n.T("help.back")))
+		b.WriteString("\n" + styles.HelpBar.Render(i18n.T("help.back")))
 		return b.String()
 	}
 
@@ -717,7 +717,7 @@ func (m WizardModel) viewProfileSelect() string {
 	}
 
 	b.WriteString("\n")
-	b.WriteString(styles.HelpBar.Render("↑↓ " + i18n.T("help.navigate") + " • Enter " + i18n.T("help.select") + " • Esc " + i18n.T("help.back")))
+	b.WriteString(styles.HelpBar.Render(i18n.T("help.navigate") + " • " + i18n.T("help.select") + " • " + i18n.T("help.back")))
 	return b.String()
 }
 
@@ -774,6 +774,6 @@ func (m WizardModel) viewAspectsSelect() string {
 	}
 
 	b.WriteString("\n")
-	b.WriteString(styles.HelpBar.Render("↑↓ " + i18n.T("help.navigate") + " • Space " + i18n.T("help.toggle") + " • Enter " + i18n.T("help.apply") + " • Esc " + i18n.T("help.back")))
+	b.WriteString(styles.HelpBar.Render(i18n.T("help.navigate") + " • " + i18n.T("help.toggle") + " • " + i18n.T("help.apply") + " • " + i18n.T("help.back")))
 	return b.String()
 }
