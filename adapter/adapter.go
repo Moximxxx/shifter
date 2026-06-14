@@ -1,5 +1,9 @@
 // Package adapter defines the AgentAdapter interface that every coding agent
 // must implement, plus the global registry for discovering adapters.
+
+// AgentAdapter is the interface every coding agent adapter must implement.
+// Each adapter reads native config into the canonical model and writes it back.
+
 package adapter
 
 import (

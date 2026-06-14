@@ -7,6 +7,12 @@
 // what could not be perfectly ported.
 //
 // This model is INTERNAL-ONLY. Users never write to it directly.
+
+// ShifterConfig is the universal configuration model.
+// It is a SUPERSET of all agent features — each adapter projects down to what it supports.
+// Loss tracking is first-class: every adapter operation accumulates LossWarnings.
+// This model is INTERNAL-ONLY. Users never write to it directly.
+
 package canonical
 
 import "time"

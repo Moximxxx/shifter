@@ -1,5 +1,10 @@
 // Package registry provides the global adapter registry.
 // It imports all adapter packages and maps agent IDs to constructors.
+
+// Package registry provides the global adapter registry.
+// It maps agent IDs to adapter constructors and is the single entry point
+// for obtaining agent adapters throughout the engine layer.
+
 package registry
 
 import (

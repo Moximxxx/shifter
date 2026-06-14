@@ -1,3 +1,8 @@
+
+// MergeConfigs merges two ShifterConfigs using the given strategy.
+// SideA is the "ours" side, SideB is "theirs".
+// Returns the merged config and any conflicts that were found.
+
 package canonical
 
 import (
