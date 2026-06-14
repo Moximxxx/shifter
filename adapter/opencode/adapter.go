@@ -277,6 +277,8 @@ func (a *Adapter) Read(ctx context.Context, opts adapter.ReadOptions) (*canonica
 	}
 
 	// --- Instructions ---
+	// AGENTS.md is the root instruction in OpenCode (auto-loaded into every context)
+	hasRootInstruction := false
 	for _, path := range oc.Instructions {
 		// Support glob patterns — read individual files
 		matches, _ := filepath.Glob(path)
@@ -288,27 +290,25 @@ func (a *Adapter) Read(ctx context.Context, opts adapter.ReadOptions) (*canonica
 			if err != nil {
 				continue
 			}
+			// AGENTS.md is the root instruction
+			scope := "named"
+			if filepath.Base(match) == "AGENTS.md" || filepath.Base(match) == "AGENTS.md" {
+				scope = "root"
+				hasRootInstruction = true
+			}
 			cfg.Instructions = append(cfg.Instructions, canonical.Instruction{
 				Path:    match,
 				Content: string(data),
-				Scope:   "named",
+				Scope:   scope,
 			})
 			cfg.Meta.SourcePaths = append(cfg.Meta.SourcePaths, match)
 		}
 	}
 
-	// AGENTS.md is auto-loaded by OpenCode
-	agentsMDPath := filepath.Join(opts.ProjectRoot, "AGENTS.md")
-	if data, err := os.ReadFile(agentsMDPath); err == nil {
-		// Check if already included via instructions
-		alreadyIncluded := false
-		for _, inst := range cfg.Instructions {
-			if inst.Path == "AGENTS.md" || strings.HasSuffix(inst.Path, "/AGENTS.md") {
-				alreadyIncluded = true
-				break
-			}
-		}
-		if !alreadyIncluded {
+	// If AGENTS.md wasn't in the instructions array, still load it as root
+	if !hasRootInstruction {
+		agentsMDPath := filepath.Join(opts.ProjectRoot, "AGENTS.md")
+		if data, err := os.ReadFile(agentsMDPath); err == nil {
 			cfg.Instructions = append(cfg.Instructions, canonical.Instruction{
 				Path:    "AGENTS.md",
 				Content: string(data),
@@ -327,7 +327,13 @@ func (a *Adapter) Read(ctx context.Context, opts adapter.ReadOptions) (*canonica
 			fileRef := agent.Prompt[6 : len(agent.Prompt)-1]
 			fullPath := filepath.Join(opts.ProjectRoot, fileRef)
 			if data, err := os.ReadFile(fullPath); err == nil {
-				prompt = string(data)
+				// Strip frontmatter from .md file — JSON fields take precedence
+				_, body, _ := format.ParseFrontMatter(string(data))
+				if strings.TrimSpace(body) != "" {
+					prompt = body
+				} else {
+					prompt = string(data)
+				}
 				cfg.Meta.SourcePaths = append(cfg.Meta.SourcePaths, fullPath)
 			}
 		}
