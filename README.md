@@ -1,6 +1,6 @@
 # 🔄 Shifter
 
-[📖 中文文档](README.zh-CN.md) · [📋 Manual](MANUAL.md)
+[📖 中文文档](README.zh-CN.md)
 
 <p align="center">
   <strong>One-click config porting between coding agent.</strong><br>
@@ -132,6 +132,10 @@ SHIFTER_ASPECTS=agents,mcp    # default aspect filter
 ```
 
 [Full environment reference →](MANUAL.md#environment-variables)
+
+## Manual
+
+Full documentation with all commands, environment variables, config file locations, FAQ, and loss severity guide — **[Shifter Manual →](MANUAL.md)**
 
 ## Development
 

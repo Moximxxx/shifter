@@ -1,6 +1,6 @@
 # 🔄 Shifter
 
-[📖 English](README.md) · [📋 操作手册](MANUAL.zh-CN.md)
+[📖 English](README.md)
 
 <p align="center">
   <strong>一键在不同 Coding Agent 之间迁移配置。</strong><br>
@@ -131,7 +131,9 @@ SHIFTER_DRY_RUN=1             # 始终先预览
 SHIFTER_ASPECTS=agents,mcp    # 默认迁移维度
 ```
 
-[完整环境变量参考 →](MANUAL.zh-CN.md)
+## 操作手册
+
+完整文档 — 所有命令详解、环境变量、配置文件位置、FAQ、损失等级说明。**[Shifter 操作手册 →](MANUAL.zh-CN.md)**
 
 ## 开发
 
