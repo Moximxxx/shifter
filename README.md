@@ -41,13 +41,20 @@ shifter port        # that's it
 ## What It Does
 
 ```
-┌──────────────┐       ┌──────────────────┐       ┌──────────────┐
-│ Claude Code  │  Read │  Canonical JSON   │ Write │  Codex CLI   │
-│  .claude/    │ ────▶ │  (private format) │ ────▶ │  .codex/     │
-└──────────────┘       └──────────────────┘       └──────────────┘
+  Claude Code              Canonical (JSON)          Codex CLI
+  .claude/                 private format            .codex/
+      |                          |                       |
+      |-- adapter.Read() ------>|                        |
+      |   agents, skills,       |                        |
+      |   mcp, hooks, perms     |                        |
+      |                         |-- adapter.Write() ---->|
+      |                         |    agents  -> [agents] |
+      |                         |    skills -> codex.md  |
+      |                         |    mcp    -> mcp_serv  |
+      |                         |    hooks  -> [[hooks]] |
 ```
 
-Read native config → universal canonical model → write native config for any target agent. Semantic mapping handles format gaps; lossy conversions generate explicit warnings — never silent data loss.
+Read native config → universal JSON → write target agent. Semantic mapping handles format gaps; lossy conversions generate clear warnings.
 
 ## Features
 
@@ -96,13 +103,13 @@ shifter ui                            # interactive TUI wizard
 
 ```
 adapter/           ═══════════ Parsing Center ═══════════
-├── claudecode/    Read  .claude/*              → canonical
-├── codex/         Read  .codex/config.toml      → canonical
-├── opencode/      Read  opencode.jsonc          → canonical
-├── qoder/         Read  .qoder/*                → canonical
-├── gemini/        Read  .gemini/settings.json   → canonical
-├── cline/         Read  .clinerules/*           → canonical
-└── aider/         Read  .aider.conf.yml         → canonical
+  - claudecode/    Read  .claude/*              → canonical
+  - codex/         Read  .codex/config.toml      → canonical
+  - opencode/      Read  opencode.jsonc          → canonical
+  - qoder/         Read  .qoder/*                → canonical
+  - gemini/        Read  .gemini/settings.json   → canonical
+  - cline/         Read  .clinerules/*           → canonical
+  - aider/         Read  .aider.conf.yml         → canonical
 
 canonical/types.go ═══════ Private Format ═══════
                    Universal JSON superset of all agents
@@ -111,11 +118,11 @@ registry/          ═══════ Adapter Factory ═══════
                    Get("codex") → Write(canonical) → .codex/config.toml
 
 engine/            ═══════ Business Logic ═══════
-├── port/          Source → Canonical → Target pipeline
-├── sync/          Bidirectional merge engine
-├── detect/        Concurrent filesystem scanner
-├── backup/        Timestamped tar.gz backup/restore
-└── profile/       ~/.shifter/profiles/ management
+  - port/          Source → Canonical → Target pipeline
+  - sync/          Bidirectional merge engine
+  - detect/        Concurrent filesystem scanner
+  - backup/        Timestamped tar.gz backup/restore
+  - profile/       ~/.shifter/profiles/ management
 ```
 
 Adding a new agent: implement `AgentAdapter` (Read + Write), register in `registry/`, done.

@@ -41,13 +41,20 @@ shifter port        # 成了
 ## 工作原理
 
 ```
-┌──────────────┐       ┌──────────────────┐       ┌──────────────┐
-│ Claude Code  │  Read │  私有格式 JSON    │ Write │  Codex CLI   │
-│  .claude/    │ ────▶ │  (Canonical)     │ ────▶ │  .codex/     │
-└──────────────┘       └──────────────────┘       └──────────────┘
+  Claude Code              Canonical (JSON)          Codex CLI
+  .claude/                 private format            .codex/
+      |                          |                       |
+      |-- adapter.Read() ------>|                        |
+      |   agents, skills,       |                        |
+      |   mcp, hooks, perms     |                        |
+      |                         |-- adapter.Write() ---->|
+      |                         |    agents  -> [agents] |
+      |                         |    skills -> codex.md  |
+      |                         |    mcp    -> mcp_serv  |
+      |                         |    hooks  -> [[hooks]] |
 ```
 
-读取原生配置 → 转为通用中间格式 → 写入任意目标 Agent。语义映射处理格式差异；不能完美迁移的功能生成明确警告 — 绝不悄悄丢失。
+读取原生配置 → 通用 JSON → 写入目标 Agent。语义映射处理格式差异，不能迁移的功能生成明确警告。
 
 ## 功能
 
@@ -96,13 +103,13 @@ shifter ui                            # 交互式 TUI 向导
 
 ```
 adapter/           ═══════════ 解析中心 ═══════════
-├── claudecode/    Read  .claude/*              → canonical
-├── codex/         Read  .codex/config.toml      → canonical
-├── opencode/      Read  opencode.jsonc          → canonical
-├── qoder/         Read  .qoder/*                → canonical
-├── gemini/        Read  .gemini/settings.json   → canonical
-├── cline/         Read  .clinerules/*           → canonical
-└── aider/         Read  .aider.conf.yml         → canonical
+  - claudecode/    Read  .claude/*              → canonical
+  - codex/         Read  .codex/config.toml      → canonical
+  - opencode/      Read  opencode.jsonc          → canonical
+  - qoder/         Read  .qoder/*                → canonical
+  - gemini/        Read  .gemini/settings.json   → canonical
+  - cline/         Read  .clinerules/*           → canonical
+  - aider/         Read  .aider.conf.yml         → canonical
 
 canonical/types.go ═══════ 私有格式 ═══════
                    通用 JSON 超集，覆盖所有 Agent
@@ -111,11 +118,11 @@ registry/          ═══════ 适配器工厂 ═══════
                    Get("codex") → Write(canonical) → .codex/config.toml
 
 engine/            ═══════ 业务引擎 ═══════
-├── port/          Source → Canonical → Target 流水线
-├── sync/          双向合并引擎
-├── detect/        并发文件系统扫描
-├── backup/        带时间戳的 tar.gz 备份/恢复
-└── profile/       ~/.shifter/profiles/ 管理
+  - port/          Source → Canonical → Target 流水线
+  - sync/          双向合并引擎
+  - detect/        并发文件系统扫描
+  - backup/        带时间戳的 tar.gz 备份/恢复
+  - profile/       ~/.shifter/profiles/ 管理
 ```
 
 添加新 Agent：实现 `AgentAdapter`（Read + Write），注册到 `registry/`，完成。
