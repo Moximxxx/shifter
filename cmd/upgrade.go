@@ -59,7 +59,7 @@ func runUpgrade(cmd *cobra.Command, args []string) error {
 	verNum := strings.TrimPrefix(targetVersion, "v")
 
 	downloadURL := fmt.Sprintf(
-		"https://github.com/Moximxxx/shifter/releases/download/v%s/shifter_v%s_%s.tar.gz",
+		"https://github.com/Moximxxx/shifter/releases/download/v%s/shifter_%s_%s.tar.gz",
 		verNum, verNum, platform,
 	)
 
