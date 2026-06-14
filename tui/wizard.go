@@ -292,12 +292,23 @@ func (m *WizardModel) handleEnter() (tea.Model, tea.Cmd) {
 		case 0: // Save
 			m.prevScreen = WizMenu
 			m.backStack = append(m.backStack, m.screen)
-				m.screen = WizSaveSelectAgent
 			m.cursorIdx = 0
+			agents := m.foundAgents()
+			if len(agents) == 0 {
+				return m, nil
+			}
+			if len(agents) == 1 {
+				m.selectedAgentID = agents[0].ID
+				m.screen = WizSaveName
+				m.inputMode = true
+				m.inputText = ""
+				return m, nil
+			}
+			m.screen = WizSaveSelectAgent
 		case 1: // Load
 			m.prevScreen = WizMenu
 			m.backStack = append(m.backStack, m.screen)
-				m.screen = WizLoadSelectProfile
+			m.screen = WizLoadSelectProfile
 			m.cursorIdx = 0
 			if !m.profilesLoaded {
 				return m, loadProfilesCmd
@@ -305,12 +316,22 @@ func (m *WizardModel) handleEnter() (tea.Model, tea.Cmd) {
 		case 2: // Port
 			m.prevScreen = WizMenu
 			m.backStack = append(m.backStack, m.screen)
-				m.screen = WizPortSelectSource
+			m.cursorIdx = 0
+			agents := m.foundAgents()
+			if len(agents) == 0 {
+				return m, nil
+			}
+			if len(agents) == 1 {
+				m.sourceID = agents[0].ID
+				m.screen = WizPortSelectTarget
+				return m, nil
+			}
 			m.cursorIdx = m.firstFoundIdx()
+			m.screen = WizPortSelectSource
 		case 3: // Settings
 			m.prevScreen = WizMenu
 			m.backStack = append(m.backStack, m.screen)
-				m.screen = WizSettings
+			m.screen = WizSettings
 			m.cursorIdx = 0
 			// Preselect current language
 			if i18n.Lang() == "zh" {
@@ -326,7 +347,7 @@ func (m *WizardModel) handleEnter() (tea.Model, tea.Cmd) {
 			m.selectedAgentID = f[m.cursorIdx].ID
 			m.prevScreen = WizSaveSelectAgent
 			m.backStack = append(m.backStack, m.screen)
-				m.screen = WizSaveName
+			m.screen = WizSaveName
 			m.inputMode = true
 			m.inputText = ""
 		}
