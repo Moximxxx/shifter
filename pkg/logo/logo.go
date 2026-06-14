@@ -24,40 +24,35 @@ var (
 			Foreground(lipgloss.Color(logoColor)).
 			Bold(true)
 
-	taglineStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color(logoColor)).
-			Italic(true).
-			PaddingLeft(2)
 )
 
 // Render returns the logo with optional tagline.
-// Always resets terminal colors first to prevent leaking from context.
+// Logo art is purple; tagline is dimmed for visual hierarchy.
+// Always resets terminal colors first.
 func Render(tagline string) string {
 	reset := "\033[0m"
 	logo := logoStyle.Render(ascii)
 	if tagline == "" {
 		return reset + logo + reset
 	}
-	return reset + logo + "\n" + taglineStyle.Render(tagline) + reset
+	dimStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#9CA3AF")).Render
+	return reset + logo + "\n  " + dimStyle(tagline) + reset
 }
 
-// Version returns the logo with version string in purple.
+// Version returns the logo with version string.
+// Logo is purple; version is dimmed.
 func Version(version string) string {
 	reset := "\033[0m"
 	logo := logoStyle.Render(ascii)
-	verStyle := lipgloss.NewStyle().
-		Foreground(lipgloss.Color(logoColor)).
-		Bold(true).
-		Render(version)
-	return reset + logo + "\n" + verStyle + reset
+	dimStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("#9CA3AF")).Render
+	return reset + logo + "\n" + dimStyle(version) + reset
 }
 
-// Small returns a compact one-line brand name in purple.
+// Small returns a compact one-line brand name — logo icon purple, text dim.
 func Small() string {
-	return lipgloss.NewStyle().
-		Foreground(lipgloss.Color(logoColor)).
-		Bold(true).
-		Render("\033[0m🔄 Shifter")
+	icon := lipgloss.NewStyle().Foreground(lipgloss.Color(logoColor)).Bold(true).Render("🔄")
+	text := lipgloss.NewStyle().Foreground(lipgloss.Color("#9CA3AF")).Bold(true).Render("Shifter")
+	return "\033[0m" + icon + " " + text
 }
 
 // RenderString is like Render but uses fmt.Sprintf for the tagline.
