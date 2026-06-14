@@ -172,3 +172,49 @@ You are a code review specialist...`
 		t.Errorf("body should contain the prompt text")
 	}
 }
+
+func TestGetFMString(t *testing.T) {
+	fm := map[string]interface{}{
+		"name": "test-agent",
+		"desc": "A description",
+	}
+	if s := GetFMString(fm, "name"); s != "test-agent" {
+		t.Errorf("GetFMString: got %q", s)
+	}
+	if s := GetFMString(fm, "missing"); s != "" {
+		t.Errorf("GetFMString missing key: got %q", s)
+	}
+}
+
+func TestGetFMStringSlice(t *testing.T) {
+	fm := map[string]interface{}{
+		"tools": []interface{}{"Read", "Grep"},
+		"tags":  "a, b, c",
+	}
+	tools := GetFMStringSlice(fm, "tools")
+	if len(tools) != 2 || tools[0] != "Read" {
+		t.Errorf("tools: got %v", tools)
+	}
+	tags := GetFMStringSlice(fm, "tags")
+	if len(tags) != 3 || tags[0] != "a" {
+		t.Errorf("tags: got %v", tags)
+	}
+	empty := GetFMStringSlice(fm, "missing")
+	if empty != nil {
+		t.Errorf("missing: got %v", empty)
+	}
+}
+
+func TestFormatYAMLFrontmatter(t *testing.T) {
+	fm := map[string]interface{}{
+		"name":        "test-agent",
+		"description": "A test agent",
+	}
+	result := FormatYAMLFrontmatter(fm)
+	if !strings.HasPrefix(result, "---\n") {
+		t.Error("should start with ---")
+	}
+	if !strings.Contains(result, "name: test-agent") {
+		t.Error("should contain name field")
+	}
+}
