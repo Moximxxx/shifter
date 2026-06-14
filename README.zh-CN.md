@@ -1,5 +1,7 @@
 # 🔄 Shifter
 
+[📖 English](README.md) | [📋 操作手册](MANUAL.zh-CN.md)
+
 **一键在不同 Coding Agent 之间迁移配置。** 配置一次，到处使用。
 
 ```bash
