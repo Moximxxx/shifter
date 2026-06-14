@@ -21,6 +21,27 @@ import (
 	"github.com/moximxxx/shifter/tui/styles"
 )
 
+// aspectItem represents a configurable aspect for porting.
+type aspectItem struct {
+	Name       string
+	Label      string
+	Selected   bool
+	Lossy      bool
+	LossReason string
+	Count      int
+}
+
+// scanAgentsCmd is a tea.Cmd that scans for coding agents.
+func scanAgentsCmd() tea.Msg {
+	results := detect.ScanAll()
+	return scanDoneMsg{results: results}
+}
+
+// scanDoneMsg carries the scan results.
+type scanDoneMsg struct {
+	results []detect.Result
+}
+
 // WizardScreen represents the wizard flow.
 type WizardScreen int
 

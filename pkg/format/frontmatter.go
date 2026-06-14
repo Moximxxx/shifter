@@ -2,6 +2,7 @@
 package format
 
 import (
+	"os"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -76,4 +77,55 @@ func ParseFrontMatter(content string) (map[string]interface{}, string, error) {
 	}
 
 	return fm, body, nil
+}
+
+// GetFMString extracts a string field from a frontmatter map.
+func GetFMString(fm map[string]interface{}, key string) string {
+	if v, ok := fm[key].(string); ok {
+		return v
+	}
+	return ""
+}
+
+// GetFMStringSlice extracts a string slice from a frontmatter map,
+// splitting on commas if the value is a string instead of a list.
+func GetFMStringSlice(fm map[string]interface{}, key string) []string {
+	switch v := fm[key].(type) {
+	case []interface{}:
+		var result []string
+		for _, item := range v {
+			if s, ok := item.(string); ok {
+				result = append(result, s)
+			}
+		}
+		return result
+	case string:
+		var result []string
+		for _, s := range strings.Split(v, ",") {
+			s = strings.TrimSpace(s)
+			if s != "" {
+				result = append(result, s)
+			}
+		}
+		return result
+	}
+	return nil
+}
+
+// ReadFrontmatterFile reads a Markdown file and parses its YAML frontmatter.
+func ReadFrontmatterFile(path string) (map[string]interface{}, string, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, "", err
+	}
+	return ParseFrontMatter(string(data))
+}
+
+// FormatYAMLFrontmatter marshals a map to YAML wrapped in frontmatter delimiters.
+func FormatYAMLFrontmatter(fields map[string]interface{}) string {
+	fmBytes, err := yaml.Marshal(fields)
+	if err != nil {
+		return "---\n---\n"
+	}
+	return "---\n" + string(fmBytes) + "---\n"
 }

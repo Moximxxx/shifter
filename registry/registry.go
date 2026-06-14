@@ -3,8 +3,7 @@
 package registry
 
 import (
-	"context"
-	"fmt"
+"fmt"
 	"sort"
 
 	"github.com/moximxxx/shifter/adapter"
@@ -56,5 +55,3 @@ func MustGet(id string) adapter.AgentAdapter {
 	return a
 }
 
-// Ensure context import is used (for future use).
-var _ = context.Background

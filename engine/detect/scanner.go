@@ -3,8 +3,8 @@ package detect
 
 import (
 	"sync"
+	"sort"
 
-	"github.com/moximxxx/shifter/adapter"
 	"github.com/moximxxx/shifter/registry"
 )
 
@@ -73,15 +73,8 @@ func ScanAll() []Result {
 }
 
 func sortResults(results []Result) {
-	// Sort by ID for deterministic output
-	for i := 0; i < len(results); i++ {
-		for j := i + 1; j < len(results); j++ {
-			if results[i].ID > results[j].ID {
-				results[i], results[j] = results[j], results[i]
-			}
-		}
-	}
+	sort.Slice(results, func(i, j int) bool {
+		return results[i].ID < results[j].ID
+	})
 }
 
-// Ensure unused imports are resolved
-var _ = adapter.DetectionResult{}
