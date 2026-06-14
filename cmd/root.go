@@ -12,6 +12,7 @@ import (
 
 	"github.com/moximxxx/shifter/engine/detect"
 	"github.com/moximxxx/shifter/engine/port"
+	"github.com/moximxxx/shifter/pkg/env"
 )
 
 var rootCmd = &cobra.Command{
@@ -39,7 +40,7 @@ The canonical model handles semantic gaps:
   • Slash commands → embedded in instructions (for agents without native commands)
   • Agents without subagent systems get agent definitions as markdown instructions
   • Loss warnings are shown for features that cannot be perfectly ported`,
-	Args: cobra.ExactArgs(1),
+	Args: cobra.MaximumNArgs(1),
 	RunE: runPort,
 }
 
@@ -62,13 +63,41 @@ var (
 )
 
 func init() {
-	portCmd.Flags().StringVar(&portTarget, "to", "", "Target agent (required)")
-	portCmd.Flags().StringVar(&portScope, "scope", "project", "Scope: global, project, or all")
+	// Read defaults from environment variables
+	if portTarget == "" {
+		portTarget = env.Target()
+	}
+	if portScope == "" {
+		portScope = env.Scope()
+	}
+	if !portDryRun {
+		portDryRun = env.DryRun()
+	}
+	if portBackup {
+		portBackup = !env.NoBackup()
+	}
+	if !portForce {
+		portForce = env.Force()
+	}
+	if portAspects == "" {
+		if aspects := env.Aspects(); len(aspects) > 0 {
+			portAspects = strings.Join(aspects, ",")
+		}
+	}
+	if projectRoot == "." {
+		if pr := env.ProjectRoot(); pr != "." {
+			projectRoot = pr
+		}
+	}
+
+	portCmd.Flags().StringVar(&portTarget, "to", portTarget, "Target agent (required)")
+	portCmd.Flags().StringVar(&portScope, "scope", portScope, "Scope: global, project, or all")
 	portCmd.Flags().BoolVar(&portDryRun, "dry-run", false, "Preview changes without writing")
 	portCmd.Flags().BoolVar(&portBackup, "backup", true, "Create backup before writing")
 	portCmd.Flags().BoolVar(&portForce, "force", false, "Skip confirmation prompts")
 	portCmd.Flags().StringVar(&portAspects, "aspects", "", "Comma-separated aspects to port (agents,skills,mcp,permissions,hooks,commands,instructions,settings)")
-	portCmd.MarkFlagRequired("to")
+	// --to can also be set via SHIFTER_TARGET env var
+	// portCmd.MarkFlagRequired("to") — handled manually in runPort
 
 	detectCmd.Flags().BoolVar(&detectJSON, "json", false, "Output as JSON")
 
@@ -86,11 +115,22 @@ func Execute() {
 }
 
 func runPort(cmd *cobra.Command, args []string) error {
-	source := args[0]
+	var source string
+	if len(args) > 0 {
+		source = args[0]
+	} else {
+		source = env.Source()
+	}
+	if source == "" {
+		return fmt.Errorf("source agent is required (set SHIFTER_SOURCE or pass as argument)")
+	}
 
 	// Validate target
 	if portTarget == "" {
-		return fmt.Errorf("--to flag is required")
+		portTarget = env.Target()
+	}
+	if portTarget == "" {
+		return fmt.Errorf("--to flag is required (set SHIFTER_TARGET or use --to)")
 	}
 
 	// Parse aspects
