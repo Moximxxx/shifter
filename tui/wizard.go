@@ -15,6 +15,7 @@ import (
 	"github.com/moximxxx/shifter/engine/port"
 	"github.com/moximxxx/shifter/engine/profile"
 	"github.com/moximxxx/shifter/pkg/i18n"
+	"github.com/moximxxx/shifter/pkg/logo"
 	"github.com/moximxxx/shifter/pkg/settings"
 	"github.com/moximxxx/shifter/registry"
 	"github.com/moximxxx/shifter/tui/styles"
@@ -76,6 +77,12 @@ type WizardModel struct {
 	sourceID  string
 	targetID  string
 }
+
+// TUI version string
+var tuiVersion = "dev"
+
+// SetVersion sets the version string for the TUI.
+func SetVersion(v string) { tuiVersion = v }
 
 // NewWizardModel creates the interactive wizard.
 func NewWizardModel() WizardModel {
@@ -562,6 +569,10 @@ func (m WizardModel) viewDone() string {
 
 func (m WizardModel) viewWelcome() string {
 	var b strings.Builder
+	b.WriteString(logo.Render(""))
+	b.WriteString("\n")
+	b.WriteString(styles.MutedText.Render("v" + tuiVersion))
+	b.WriteString("\n\n")
 	b.WriteString(styles.Title.Render("🔄 " + i18n.T("welcome.title")))
 	b.WriteString("\n\n")
 	b.WriteString(i18n.T("welcome.select_lang"))
@@ -593,6 +604,10 @@ func (m WizardModel) viewWelcome() string {
 
 func (m WizardModel) viewMenu() string {
 	var b strings.Builder
+	b.WriteString(logo.Render(""))
+	b.WriteString("\n")
+	b.WriteString(styles.MutedText.Render("v" + tuiVersion))
+	b.WriteString("\n\n")
 	b.WriteString(styles.Title.Render("🔄 " + i18n.T("menu.title")))
 	b.WriteString("\n\n")
 

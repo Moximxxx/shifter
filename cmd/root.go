@@ -13,6 +13,7 @@ import (
 	"github.com/moximxxx/shifter/engine/detect"
 	"github.com/moximxxx/shifter/engine/port"
 	"github.com/moximxxx/shifter/pkg/env"
+	"github.com/moximxxx/shifter/tui"
 )
 
 var rootCmd = &cobra.Command{
@@ -149,6 +150,7 @@ var versionInfo string
 func SetVersion(v string) {
 	versionInfo = v
 	rootCmd.Version = v
+	tui.SetVersion(v)
 }
 
 // VersionString returns the current version.
