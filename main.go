@@ -7,6 +7,7 @@ import (
 
 	"github.com/moximxxx/shifter/cmd"
 	"github.com/moximxxx/shifter/pkg/i18n"
+	"github.com/moximxxx/shifter/pkg/logo"
 	"github.com/moximxxx/shifter/pkg/settings"
 )
 
@@ -33,8 +34,14 @@ func main() {
 
 	// Handle --version / -v
 	if len(os.Args) > 1 && (os.Args[1] == "--version" || os.Args[1] == "-v") {
-		fmt.Printf("shifter version %s\n", cmd.VersionString())
+		fmt.Println(logo.Render(""))
+		fmt.Printf("v%s\n\n", cmd.VersionString())
 		os.Exit(0)
+	}
+
+	// Show logo when no args or only --help
+	if len(os.Args) <= 1 || os.Args[1] == "--help" || os.Args[1] == "-h" {
+		fmt.Fprintln(os.Stderr, logo.Render(i18n.T("app.tagline")))
 	}
 
 	cmd.Execute()

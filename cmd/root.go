@@ -17,11 +17,8 @@ import (
 
 var rootCmd = &cobra.Command{
 	Use:   "shifter",
-	Short: "Shifter — one-click config porting between coding agents",
-	Long: `Shifter lets you port configurations (agents, skills, MCP servers,
-permissions, hooks, and more) between different coding agents.
-
-Supported agents: Claude Code, Codex CLI, OpenCode, Gemini CLI, Qoder, Cline, Aider.
+	Short: "One-click config porting between coding agents",
+	Long: `Supported agents: Claude Code, Codex CLI, OpenCode, Gemini CLI, Qoder, Cline, Aider.
 
 Examples:
   shifter detect                           # Scan for configured agents
@@ -30,6 +27,44 @@ Examples:
   shifter ui                               # Launch interactive TUI`,
 	SilenceUsage: true,
 }
+
+// Set custom help template
+func init() {
+	cobra.AddTemplateFunc("groupStyle", func(s string) string { return s })
+	rootCmd.SetHelpTemplate(`{{with (or .Long .Short)}}{{. | trimTrailingWhitespaces}}
+
+{{end}}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔄 Transfer
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  port        Transfer config between agents
+  sync        Bidirectional sync between agents
+  export      Export to canonical JSON
+  import      Import from canonical JSON
+
+💾 Profiles
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  save        Save config as reusable profile
+  load        Apply saved profile to project
+  profiles    List/delete saved profiles
+
+🔧 Tools
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  detect      Scan for configured agents
+  status      Show project agent status
+  backup      Create/restore backups
+  config      Manage Shifter settings
+  env         Environment configuration
+
+🎨 Interface
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  ui          Interactive terminal wizard
+  wizard      Same as ui
+
+Flags:
+{{.LocalFlags.FlagUsages | trimTrailingWhitespaces}}
+
+Use "shifter [command] --help" for more information.
+`)}
 
 var portCmd = &cobra.Command{
 	Use:   "port <source> --to <target>",
@@ -213,29 +248,36 @@ func runPort(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	fmt.Printf("✓ Port complete: %s → %s\n\n", result.Source, result.Target)
+	fmt.Printf("✅ Port complete: %s → %s\n\n", result.Source, result.Target)
 
 	if len(result.FilesWritten) > 0 {
-		fmt.Println("Files written:")
+		fmt.Println("📄 Files written:")
 		for _, f := range result.FilesWritten {
-			fmt.Printf("  ✓ %s\n", f)
+			fmt.Printf("  ✅ %s\n", f)
 		}
 	}
 	if len(result.FilesSkipped) > 0 {
-		fmt.Println("Files skipped:")
+		fmt.Println("⏭  Files skipped:")
 		for _, f := range result.FilesSkipped {
 			fmt.Printf("  - %s\n", f)
 		}
 	}
 	if len(result.LossWarnings) > 0 {
-		fmt.Println("\nLoss warnings:")
+		fmt.Println("\n⚠️  Loss warnings:")
 		for _, w := range result.LossWarnings {
-			fmt.Printf("  ⚠ [%s] %s: %s\n", w.Severity, w.Feature, w.Reason)
+			icon := "ℹ️"
+			switch w.Severity {
+			case "warning":
+				icon = "⚠️"
+			case "critical":
+				icon = "🔴"
+			}
+			fmt.Printf("  %s [%s] %s: %s\n", icon, w.Severity, w.Feature, w.Reason)
 		}
 	}
 
 	if result.Config != nil {
-		fmt.Printf("\nSummary: %d agents, %d skills, %d commands, %d MCP servers, %d hooks\n",
+		fmt.Printf("\n📊 Summary: %d agents, %d skills, %d commands, %d MCP servers, %d hooks\n",
 			len(result.Config.Agents),
 			len(result.Config.Skills),
 			len(result.Config.Commands),
@@ -256,20 +298,27 @@ func runDetect(cmd *cobra.Command, args []string) error {
 		return enc.Encode(results)
 	}
 
-	fmt.Println("Scanning for configured coding agents...")
+	fmt.Println("🔍 Scanning for configured coding agents...")
 	fmt.Println()
+	configured := 0
 	for _, r := range results {
 		if r.Found {
-			parts := []string{"✓", r.Name}
+			configured++
+			parts := []string{"✅", r.Name}
+			details := []string{}
 			for k, v := range r.Summary {
-				parts = append(parts, fmt.Sprintf("%d %s", v, k))
+				details = append(details, fmt.Sprintf("%d %s", v, k))
+			}
+			if len(details) > 0 {
+				parts = append(parts, strings.Join(details, ", "))
 			}
 			fmt.Printf("  %s\n", strings.Join(parts, "  "))
 		} else {
-			fmt.Printf("  ✗ %s (not configured)\n", r.Name)
+			fmt.Printf("  ╳  %-16s (not configured)\n", r.Name)
 		}
 	}
 
-	fmt.Println("\nUse 'shifter port <source> --to <target>' to port configs.")
+	fmt.Printf("\n  %d of %d agents configured.\n", configured, len(results))
+	fmt.Println("\n💡 Use 'shifter port <source> --to <target>' to port configs.")
 	return nil
 }
