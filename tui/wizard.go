@@ -191,6 +191,13 @@ func (m WizardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if m.inputMode {
 			return m.handleInputMode(msg)
 		}
+		// FlowHub: typing starts search mode
+		if m.screen == WizFlowHub && len(msg.String()) == 1 && msg.String() != " " {
+			m.inputMode = true
+			m.inputText = ""
+			m.flowhubQuery = msg.String()
+			return m, nil
+		}
 
 		switch msg.String() {
 		case "ctrl+c", "esc":

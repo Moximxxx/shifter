@@ -125,3 +125,11 @@ shifter/
 - 提交前检查 `pkg/i18n/locales/` 两个文件是否同步更新
 
 详见: [docs/rules/R-01-i18n.md](docs/rules/R-01-i18n.md)
+
+## Rules Index
+
+- [R-01: i18n Required](docs/rules/R-01-i18n.md) — 所有 UI 字符串必须国际化
+
+## Incidents Index
+
+- [INC-2026-06-16: Help Bar Duplication](docs/incidents/INC-2026-06-16-helpbar-duplication.md) — i18n 与 Go 代码按键前缀重复
