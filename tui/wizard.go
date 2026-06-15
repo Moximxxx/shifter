@@ -627,32 +627,41 @@ func (m WizardModel) View() string {
 	}
 }
 
+func (m WizardModel) viewHeader() string {
+	var b strings.Builder
+	b.WriteString(logo.Render(""))
+	b.WriteString("\n")
+	b.WriteString(styles.MutedText.Render(tuiVersion))
+	b.WriteString("\n")
+	return b.String()
+}
+
 func (m WizardModel) viewCurrentScreen() string {
 	switch m.screen {
 	case WizWelcome:
 		return m.viewWelcome()
 	case WizMenu:
-		return m.viewMenu()
+		return m.viewHeader() + "\n" + m.viewMenu()
 	case WizSaveSelectAgent:
-		return m.viewAgentSelect(i18n.T("save.title"), i18n.T("save.subtitle"))
+		return m.viewHeader() + "\n" + m.viewAgentSelect(i18n.T("save.title"), i18n.T("save.subtitle"))
 	case WizSaveName:
-		return m.viewNameInput()
+		return m.viewHeader() + "\n" + m.viewNameInput()
 	case WizPortSelectSource:
-		return m.viewAgentSelect(i18n.T("port.title"), i18n.T("port.source_subtitle"))
+		return m.viewHeader() + "\n" + m.viewAgentSelect(i18n.T("port.title"), i18n.T("port.source_subtitle"))
 	case WizPortSelectTarget:
-		return m.viewAgentSelect(i18n.Tf("port.target_title", map[string]string{"source": m.sourceID}), i18n.T("port.target_subtitle"))
+		return m.viewHeader() + "\n" + m.viewAgentSelect(i18n.Tf("port.target_title", map[string]string{"source": m.sourceID}), i18n.T("port.target_subtitle"))
 	case WizPortAspects:
-		return m.viewAspectsSelect()
+		return m.viewHeader() + "\n" + m.viewAspectsSelect()
 	case WizLoadSelectProfile:
-		return m.viewProfileSelect()
+		return m.viewHeader() + "\n" + m.viewProfileSelect()
 	case WizLoadSelectTarget:
-		return m.viewAgentSelect(i18n.T("load.select_target"), i18n.T("load.target_subtitle"))
+		return m.viewHeader() + "\n" + m.viewAgentSelect(i18n.T("load.select_target"), i18n.T("load.target_subtitle"))
 	case WizSettings:
-		return m.viewSettings()
+		return m.viewHeader() + "\n" + m.viewSettings()
 	case WizTemplates:
-		return m.viewTemplates()
+		return m.viewHeader() + "\n" + m.viewTemplates()
 	case WizTemplateDetail:
-		return m.viewTemplateDetail()
+		return m.viewHeader() + "\n" + m.viewTemplateDetail()
 	}
 	return ""
 }
@@ -702,10 +711,6 @@ func (m WizardModel) viewWelcome() string {
 
 func (m WizardModel) viewMenu() string {
 	var b strings.Builder
-	b.WriteString(logo.Render(""))
-	b.WriteString("\n")
-	b.WriteString(styles.MutedText.Render(tuiVersion))
-	b.WriteString("\n\n")
 	// Result banner (from save/load/port operations)
 	if m.resultBanner != "" {
 		b.WriteString(styles.Border.Render(m.resultBanner))
