@@ -45,8 +45,14 @@ var flowPublishCmd = &cobra.Command{
 
 var flowListCmd = &cobra.Command{
 	Use:   "list",
-	Short: "List saved workflows available to publish",
+	Short: "Browse FlowHub (TUI)",
 	RunE:  runFlowList,
+}
+
+var flowTrendingCmd = &cobra.Command{
+	Use:   "trending",
+	Short: "Show trending workflows on FlowHub",
+	RunE:  runFlowTrending,
 }
 
 var (
@@ -62,7 +68,7 @@ func init() {
 	flowPublishCmd.Flags().StringVar(&flowDesc, "desc", "", "Description")
 	flowInstallCmd.Flags().StringVar(&flowInstallTo, "to", "", "Target agent to apply the workflow to")
 
-	flowCmd.AddCommand(flowSearchCmd, flowInstallCmd, flowPublishCmd, flowListCmd)
+	flowCmd.AddCommand(flowSearchCmd, flowInstallCmd, flowPublishCmd, flowListCmd, flowTrendingCmd)
 	rootCmd.AddCommand(flowCmd)
 }
 
@@ -253,4 +259,24 @@ shifter flow install %s
 
 func runFlowList(cmd *cobra.Command, args []string) error {
 	return tui.StandaloneFlowHub()
+}
+
+func runFlowTrending(cmd *cobra.Command, args []string) error {
+	results, err := flowhub.Search("")
+	if err != nil {
+		return fmt.Errorf("fetch: %w", err)
+	}
+	if len(results) == 0 {
+		fmt.Println("No workflows yet.")
+		return nil
+	}
+	// Sort by downloads descending (already done in Search)
+	fmt.Printf("🔥 Trending on FlowHub\n\n")
+	for i, w := range results {
+		if i >= 10 {
+			break
+		}
+		fmt.Printf("  %2d. %s v%s  ⭐%d  %s\n", i+1, w.Name, w.Version, w.Downloads, w.Agent)
+	}
+	return nil
 }
