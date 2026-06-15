@@ -62,6 +62,7 @@ const (
 	WizSettings
 	WizTemplates
 	WizTemplateDetail
+	WizFlowHub
 )
 
 // WizardModel is the interactive config wizard.
@@ -279,7 +280,7 @@ func (m *WizardModel) canMoveDown() bool {
 	case WizWelcome:
 		return m.cursorIdx < 1 // en, zh
 	case WizMenu:
-		return m.cursorIdx < 4 // Save, Load, Port, Templates, Settings
+		return m.cursorIdx < 5 // Save, Load, Port, Templates, FlowHub, Settings
 	case WizTemplates:
 		return m.cursorIdx < len(m.profileList)-1
 	case WizSaveSelectAgent, WizPortSelectSource, WizPortSelectTarget:
@@ -365,7 +366,12 @@ func (m *WizardModel) handleEnter() (tea.Model, tea.Cmd) {
 			if !m.profilesLoaded {
 				return m, loadProfilesCmd
 			}
-		case 4: // Settings
+		case 4: // FlowHub
+			m.backStack = append(m.backStack, m.screen)
+			m.screen = WizFlowHub
+			m.cursorIdx = 0
+			return m, nil
+		case 5: // Settings
 			m.prevScreen = WizMenu
 			m.backStack = append(m.backStack, m.screen)
 			m.screen = WizSettings
@@ -676,6 +682,8 @@ func (m WizardModel) viewCurrentScreen() string {
 		return m.viewHeader() + "\n" + m.viewTemplates()
 	case WizTemplateDetail:
 		return m.viewHeader() + "\n" + m.viewTemplateDetail()
+	case WizFlowHub:
+		return m.viewHeader() + "\n" + m.viewFlowHub()
 	}
 	return ""
 }
@@ -757,6 +765,7 @@ func (m WizardModel) viewMenu() string {
 		i18n.T("menu.load"),
 		i18n.T("menu.port"),
 		"📋 " + i18n.T("templates.title"),
+		"🌐 FlowHub",
 		"⚙  " + i18n.T("settings.title"),
 	}
 
@@ -936,6 +945,24 @@ func (m WizardModel) viewTemplateDetail() string {
 			len(cfg.Permissions.AllowRules), len(cfg.Permissions.DenyRules)))
 	}
 
+	b.WriteString("\n")
+	b.WriteString(styles.HelpBar.Render(i18n.T("help.back")))
+	return b.String()
+}
+
+func (m WizardModel) viewFlowHub() string {
+	var b strings.Builder
+	b.WriteString(styles.Title.Render("🌐 FlowHub — Workflow Marketplace"))
+	b.WriteString("\n\n")
+	b.WriteString(styles.MutedText.Render("GitHub-backed, zero-cost workflow sharing"))
+	b.WriteString("\n\n")
+	b.WriteString("Available via CLI:\n\n")
+	b.WriteString("  shifter flow search     # Browse workflows\n")
+	b.WriteString("  shifter flow install    # Install a workflow\n")
+	b.WriteString("  shifter flow publish    # Share your workflow\n")
+	b.WriteString("  shifter flow list       # List all workflows\n")
+	b.WriteString("\n")
+	b.WriteString(fmt.Sprintf("Visit: github.com/Moximxxx/flowhub\n"))
 	b.WriteString("\n")
 	b.WriteString(styles.HelpBar.Render(i18n.T("help.back")))
 	return b.String()

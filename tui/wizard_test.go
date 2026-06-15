@@ -213,7 +213,7 @@ func TestWizard_Esc_Navigation(t *testing.T) {
 func TestWizard_Settings_LanguageToggle(t *testing.T) {
 	m := NewWizardModel()
 	m.screen = WizMenu
-	m.cursorIdx = 4 // Settings
+	m.cursorIdx = 5 // Settings (after Templates + FlowHub)
 	m.detectResults = []detect.Result{}
 
 	m = sendKey(m, "enter")
