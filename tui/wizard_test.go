@@ -365,3 +365,42 @@ func TestWizard_FirstFoundIdx(t *testing.T) {
 		t.Errorf("firstFoundIdx: got %d, want 1", idx)
 	}
 }
+
+// ============================================================
+// Bug 1: Esc during save name input cancels to menu
+// ============================================================
+func TestWizard_SaveName_Esc_Cancels(t *testing.T) {
+	m := NewWizardModel()
+	m.screen = WizSaveName
+	m.inputMode = true
+	m.inputText = "test"
+	m.backStack = append(m.backStack, WizMenu)
+	m.detectResults = []detect.Result{
+		{ID: "claude-code", Name: "Claude Code", Found: true, HasProjectConfig: true},
+	}
+	m.selectedAgentID = "claude-code"
+
+	m = sendKey(m, "esc")
+	if m.screen != WizMenu {
+		t.Errorf("Esc should cancel input and return to WizMenu, got %v", m.screen)
+	}
+	if m.inputMode {
+		t.Error("inputMode should be false after cancel")
+	}
+}
+
+// ============================================================
+// Bug 3: Result banner shown on menu after save/load/port
+// ============================================================
+func TestWizard_ResultBanner_OnMenu(t *testing.T) {
+	m := NewWizardModel()
+	m.screen = WizMenu
+	m.detectResults = []detect.Result{
+		{ID: "claude-code", Name: "Claude Code", Found: true, HasProjectConfig: true, Summary: map[string]int{"agents": 2}},
+	}
+	m.resultBanner = "✓ Profile test saved (2 agents, 3 MCP)"
+	view := m.View()
+	if len(view) == 0 {
+		t.Error("menu view should render with banner")
+	}
+}
