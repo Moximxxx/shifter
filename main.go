@@ -4,6 +4,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/moximxxx/shifter/cmd"
 	"github.com/moximxxx/shifter/pkg/i18n"
@@ -41,8 +42,15 @@ func main() {
 		os.Exit(0)
 	}
 
-	// No arguments → launch interactive TUI
-	if len(os.Args) <= 1 {
+	// No arguments (or only flags like --log) → launch TUI
+	onlyFlags := true
+	for _, a := range os.Args[1:] {
+		if !strings.HasPrefix(a, "-") {
+			onlyFlags = false
+			break
+		}
+	}
+	if len(os.Args) <= 1 || onlyFlags {
 		cmd.LaunchTUI()
 		return
 	}
