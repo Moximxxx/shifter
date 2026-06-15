@@ -853,7 +853,7 @@ func (m WizardModel) viewTemplates() string {
 	if len(m.profileList) == 0 {
 		b.WriteString("No saved templates found.\n\n")
 		b.WriteString("Use '💾 Save' from the main menu to create one.\n")
-		b.WriteString("\n" + styles.HelpBar.Render("Esc "+i18n.T("help.back")))
+		b.WriteString("\n" + styles.HelpBar.Render(i18n.T("help.back")))
 		return b.String()
 	}
 
@@ -876,7 +876,7 @@ func (m WizardModel) viewTemplates() string {
 	}
 
 	b.WriteString("\n")
-	b.WriteString(styles.HelpBar.Render(i18n.T("help.navigate")+" • Enter "+i18n.T("help.select")+" • Esc "+i18n.T("help.back")))
+	b.WriteString(styles.HelpBar.Render(i18n.T("help.navigate")+" • "+i18n.T("help.select")+" • "+i18n.T("help.back")))
 	return b.String()
 }
 
