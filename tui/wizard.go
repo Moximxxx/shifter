@@ -345,12 +345,12 @@ func (m *WizardModel) handleEnter() (tea.Model, tea.Cmd) {
 			}
 			m.cursorIdx = m.firstFoundIdx()
 			m.screen = WizPortSelectSource
-		case 3: // Settings
+		case 3: // Templates
 			m.prevScreen = WizMenu
 			m.backStack = append(m.backStack, m.screen)
 			m.screen = WizSettings
 			m.cursorIdx = 0
-		case 4: // Templates
+		case 4: // Settings
 			m.prevScreen = WizMenu
 			m.backStack = append(m.backStack, m.screen)
 			m.screen = WizTemplates
@@ -738,7 +738,7 @@ func (m WizardModel) viewMenu() string {
 		i18n.T("menu.save"),
 		i18n.T("menu.load"),
 		i18n.T("menu.port"),
-		"📋 Templates — Browse saved workflow templates",
+		"📋 " + i18n.T("templates.title"),
 		"⚙  " + i18n.T("settings.title"),
 	}
 
@@ -843,7 +843,7 @@ func (m WizardModel) viewProfileSelect() string {
 
 func (m WizardModel) viewTemplates() string {
 	var b strings.Builder
-	b.WriteString(styles.Title.Render("📋 Saved Workflow Templates"))
+	b.WriteString(styles.Title.Render("📋 " + i18n.T("templates.title")))
 	b.WriteString("\n\n")
 
 	if len(m.profileList) == 0 {
@@ -914,7 +914,7 @@ func (m WizardModel) viewTemplateDetail() string {
 	}
 
 	b.WriteString("\n")
-	b.WriteString(styles.HelpBar.Render("Esc " + i18n.T("help.back")))
+	b.WriteString(styles.HelpBar.Render(i18n.T("help.back")))
 	return b.String()
 }
 

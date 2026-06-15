@@ -72,5 +72,6 @@
   "error.target_required": "Target agent is required (set SHIFTER_TARGET or use --to)",
   "error.unknown_agent": "Unknown agent: {agent}",
   "error.read_failed": "Failed to read {agent} config",
-  "error.write_failed": "Failed to write {agent} config"
+  "error.write_failed": "Failed to write {agent} config",
+  "templates.title": "Saved Workflow Templates"
 }

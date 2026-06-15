@@ -72,5 +72,6 @@
   "error.target_required": "缺少目标 Agent（设置 SHIFTER_TARGET 环境变量或使用 --to）",
   "error.unknown_agent": "未知 Agent: {agent}",
   "error.read_failed": "读取 {agent} 配置失败",
-  "error.write_failed": "写入 {agent} 配置失败"
+  "error.write_failed": "写入 {agent} 配置失败",
+  "templates.title": "已保存的工作流模板"
 }
