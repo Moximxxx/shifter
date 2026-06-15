@@ -59,6 +59,8 @@ const (
 	WizPortAspects
 	WizPortDone
 	WizSettings
+	WizTemplates
+	WizTemplateDetail
 )
 
 // WizardModel is the interactive config wizard.
@@ -265,7 +267,9 @@ func (m *WizardModel) canMoveDown() bool {
 	case WizWelcome:
 		return m.cursorIdx < 1 // en, zh
 	case WizMenu:
-		return m.cursorIdx < 3 // Save, Load, Port, Settings
+		return m.cursorIdx < 4 // Save, Load, Port, Templates, Settings
+	case WizTemplates:
+		return m.cursorIdx < len(m.profileList)-1
 	case WizSaveSelectAgent, WizPortSelectSource, WizPortSelectTarget:
 		return m.cursorIdx < len(m.detectResults)-1
 	case WizLoadSelectProfile:
@@ -346,6 +350,14 @@ func (m *WizardModel) handleEnter() (tea.Model, tea.Cmd) {
 			m.backStack = append(m.backStack, m.screen)
 			m.screen = WizSettings
 			m.cursorIdx = 0
+		case 4: // Templates
+			m.prevScreen = WizMenu
+			m.backStack = append(m.backStack, m.screen)
+			m.screen = WizTemplates
+			m.cursorIdx = 0
+			if !m.profilesLoaded {
+				return m, loadProfilesCmd
+			}
 			// Preselect current language
 			if i18n.Lang() == "zh" {
 				m.langChoice = 1
@@ -353,6 +365,19 @@ func (m *WizardModel) handleEnter() (tea.Model, tea.Cmd) {
 				m.langChoice = 0
 			}
 		}
+		return m, nil
+
+	case WizTemplates:
+		if m.cursorIdx < len(m.profileList) {
+			m.selectedProfile = &m.profileList[m.cursorIdx]
+			m.prevScreen = WizTemplates
+			m.backStack = append(m.backStack, m.screen)
+			m.screen = WizTemplateDetail
+		}
+		return m, nil
+
+	case WizTemplateDetail:
+		m.screen = WizTemplates
 		return m, nil
 
 	case WizSaveSelectAgent:
@@ -624,6 +649,10 @@ func (m WizardModel) viewCurrentScreen() string {
 		return m.viewAgentSelect(i18n.T("load.select_target"), i18n.T("load.target_subtitle"))
 	case WizSettings:
 		return m.viewSettings()
+	case WizTemplates:
+		return m.viewTemplates()
+	case WizTemplateDetail:
+		return m.viewTemplateDetail()
 	}
 	return ""
 }
@@ -709,7 +738,8 @@ func (m WizardModel) viewMenu() string {
 		i18n.T("menu.save"),
 		i18n.T("menu.load"),
 		i18n.T("menu.port"),
-		"⚙  " + i18n.T("settings.title") + " — Change language and preferences",
+		"📋 Templates — Browse saved workflow templates",
+		"⚙  " + i18n.T("settings.title"),
 	}
 
 	for i, item := range items {
@@ -808,6 +838,83 @@ func (m WizardModel) viewProfileSelect() string {
 
 	b.WriteString("\n")
 	b.WriteString(styles.HelpBar.Render(i18n.T("help.navigate") + " • " + i18n.T("help.select") + " • " + i18n.T("help.back")))
+	return b.String()
+}
+
+func (m WizardModel) viewTemplates() string {
+	var b strings.Builder
+	b.WriteString(styles.Title.Render("📋 Saved Workflow Templates"))
+	b.WriteString("\n\n")
+
+	if len(m.profileList) == 0 {
+		b.WriteString("No saved templates found.\n\n")
+		b.WriteString("Use '💾 Save' from the main menu to create one.\n")
+		b.WriteString("\n" + styles.HelpBar.Render("Esc "+i18n.T("help.back")))
+		return b.String()
+	}
+
+	for i, p := range m.profileList {
+		line := fmt.Sprintf("  %s", p.Name)
+		if p.SourceAgent != "" {
+			line += fmt.Sprintf("  (from %s)", p.SourceAgent)
+		}
+		if i == m.cursorIdx {
+			b.WriteString(styles.ActiveItem.Render("❯ " + line))
+		} else {
+			b.WriteString(styles.InactiveItem.Render("  " + line))
+		}
+		b.WriteString("\n")
+		b.WriteString(styles.MutedText.Render(fmt.Sprintf("      %s", p.Summary())))
+		if p.Description != "" {
+			b.WriteString("\n" + styles.MutedText.Render(fmt.Sprintf("      %s", p.Description)))
+		}
+		b.WriteString("\n")
+	}
+
+	b.WriteString("\n")
+	b.WriteString(styles.HelpBar.Render(i18n.T("help.navigate")+" • Enter "+i18n.T("help.select")+" • Esc "+i18n.T("help.back")))
+	return b.String()
+}
+
+func (m WizardModel) viewTemplateDetail() string {
+	var b strings.Builder
+	p := m.selectedProfile
+	if p == nil || p.Config == nil {
+		return "No profile selected"
+	}
+
+	b.WriteString(styles.Title.Render(fmt.Sprintf("📋 %s", p.Name)))
+	b.WriteString("\n\n")
+
+	if p.Description != "" {
+		b.WriteString(p.Description)
+		b.WriteString("\n\n")
+	}
+	b.WriteString(styles.MutedText.Render(fmt.Sprintf("Source: %s  |  Updated: %s", p.SourceAgent, p.UpdatedAt.Format("2006-01-02 15:04"))))
+	b.WriteString("\n\n")
+
+	cfg := p.Config
+	b.WriteString(fmt.Sprintf("  Agents:      %d\n", len(cfg.Agents)))
+	for _, a := range cfg.Agents {
+		b.WriteString(fmt.Sprintf("    • %s — %s\n", a.Name, a.Description))
+	}
+	b.WriteString(fmt.Sprintf("  Skills:      %d\n", len(cfg.Skills)))
+	for _, s := range cfg.Skills {
+		b.WriteString(fmt.Sprintf("    • %s\n", s.Name))
+	}
+	b.WriteString(fmt.Sprintf("  Commands:    %d\n", len(cfg.Commands)))
+	b.WriteString(fmt.Sprintf("  MCP Servers: %d\n", len(cfg.MCPServers)))
+	for _, m := range cfg.MCPServers {
+		b.WriteString(fmt.Sprintf("    • %s (%s)\n", m.Name, m.Type))
+	}
+	b.WriteString(fmt.Sprintf("  Hooks:       %d\n", len(cfg.Hooks)))
+	if cfg.Permissions != nil {
+		b.WriteString(fmt.Sprintf("  Permissions: %d allow, %d deny\n",
+			len(cfg.Permissions.AllowRules), len(cfg.Permissions.DenyRules)))
+	}
+
+	b.WriteString("\n")
+	b.WriteString(styles.HelpBar.Render("Esc " + i18n.T("help.back")))
 	return b.String()
 }
 
