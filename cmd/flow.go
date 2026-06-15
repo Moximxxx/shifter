@@ -1,0 +1,244 @@
+package cmd
+
+import (
+	"encoding/json"
+	"fmt"
+	"os"
+	"strings"
+
+	"github.com/spf13/cobra"
+
+	"github.com/moximxxx/shifter/adapter"
+	"github.com/moximxxx/shifter/canonical"
+	"github.com/moximxxx/shifter/engine/detect"
+	"github.com/moximxxx/shifter/engine/flowhub"
+	"github.com/moximxxx/shifter/registry"
+)
+
+var flowCmd = &cobra.Command{
+	Use:   "flow",
+	Short: "FlowHub — workflow marketplace",
+	Long:  `Search, install, and publish workflows on FlowHub (GitHub-backed, zero-cost).`,
+}
+
+var flowSearchCmd = &cobra.Command{
+	Use:   "search [query]",
+	Short: "Search FlowHub for workflows",
+	Args:  cobra.MaximumNArgs(1),
+	RunE:  runFlowSearch,
+}
+
+var flowInstallCmd = &cobra.Command{
+	Use:   "install <name>",
+	Short: "Install a workflow from FlowHub",
+	Args:  cobra.ExactArgs(1),
+	RunE:  runFlowInstall,
+}
+
+var flowPublishCmd = &cobra.Command{
+	Use:   "publish <name>",
+	Short: "Publish current workflow to FlowHub",
+	Args:  cobra.ExactArgs(1),
+	RunE:  runFlowPublish,
+}
+
+var flowListCmd = &cobra.Command{
+	Use:   "list",
+	Short: "List saved workflows available to publish",
+	RunE:  runFlowList,
+}
+
+var (
+	flowTags        string
+	flowSource      string
+	flowDesc        string
+	flowInstallTo   string
+)
+
+func init() {
+	flowPublishCmd.Flags().StringVar(&flowTags, "tags", "", "Comma-separated tags")
+	flowPublishCmd.Flags().StringVar(&flowSource, "source", "", "Source agent (auto-detect if omitted)")
+	flowPublishCmd.Flags().StringVar(&flowDesc, "desc", "", "Description")
+	flowInstallCmd.Flags().StringVar(&flowInstallTo, "to", "", "Target agent to apply the workflow to")
+
+	flowCmd.AddCommand(flowSearchCmd, flowInstallCmd, flowPublishCmd, flowListCmd)
+	rootCmd.AddCommand(flowCmd)
+}
+
+func runFlowSearch(cmd *cobra.Command, args []string) error {
+	query := ""
+	if len(args) > 0 {
+		query = args[0]
+	}
+
+	results, err := flowhub.Search(query)
+	if err != nil {
+		return fmt.Errorf("search failed: %w\n  FlowHub may not be available yet. Visit %s", err, flowhub.RepoURL)
+	}
+
+	if len(results) == 0 {
+		fmt.Printf("No workflows found for %q\n", query)
+		fmt.Printf("\nVisit %s to browse all workflows.\n", flowhub.RepoURL)
+		return nil
+	}
+
+	fmt.Printf("FlowHub — %d workflow(s)\n\n", len(results))
+	for _, w := range results {
+		fmt.Printf("  📦 %s", w.Name)
+		if w.Version != "" {
+			fmt.Printf(" v%s", w.Version)
+		}
+		fmt.Printf("  ⭐%d\n", w.Downloads)
+		if w.Description != "" {
+			fmt.Printf("      %s\n", w.Description)
+		}
+		fmt.Printf("      by %s  •  agent: %s", w.Author, w.Agent)
+		if len(w.Tags) > 0 {
+			fmt.Printf("  •  %s", strings.Join(w.Tags, ", "))
+		}
+		fmt.Println("\n")
+	}
+
+	fmt.Printf("Install: shifter flow install <name>\n")
+	return nil
+}
+
+func runFlowInstall(cmd *cobra.Command, args []string) error {
+	name := args[0]
+	fmt.Printf("↓ Downloading %s from FlowHub...\n", name)
+
+	data, err := flowhub.Download(name)
+	if err != nil {
+		return err
+	}
+
+	var cfg canonical.ShifterConfig
+	if err := json.Unmarshal(data, &cfg); err != nil {
+		return fmt.Errorf("parse workflow: %w", err)
+	}
+
+	target := flowInstallTo
+	if target == "" {
+		// Try to auto-detect which agent is configured here
+		results := detect.ScanAll()
+		for _, r := range results {
+			if r.Found && r.HasProjectConfig {
+				target = r.ID
+				break
+			}
+		}
+	}
+	if target == "" {
+		return fmt.Errorf("no target agent found; use --to <agent> to specify")
+	}
+
+	tgtAdapter, err := registry.Get(target)
+	if err != nil {
+		return err
+	}
+
+	result, err := tgtAdapter.Write(cmd.Context(), &cfg, adapter.WriteOptions{
+		Scope:       "project",
+		ProjectRoot: projectRoot,
+		Backup:      true,
+	})
+	if err != nil {
+		return fmt.Errorf("apply workflow: %w", err)
+	}
+
+	fmt.Printf("✓ Installed %s → %s\n", name, target)
+	for _, f := range result.FilesWritten {
+		fmt.Printf("  ✓ %s\n", f)
+	}
+	if len(result.LossWarnings) > 0 {
+		fmt.Println("\nLoss warnings:")
+		for _, w := range result.LossWarnings {
+			fmt.Printf("  ⚠ %s\n", w.Reason)
+		}
+	}
+	return nil
+}
+
+func runFlowPublish(cmd *cobra.Command, args []string) error {
+	name := args[0]
+	source := flowSource
+	if source == "" {
+		results := detect.ScanAll()
+		for _, r := range results {
+			if r.Found && r.HasProjectConfig {
+				source = r.ID
+				break
+			}
+		}
+	}
+	if source == "" {
+		return fmt.Errorf("no configured agent found; use --source <agent>")
+	}
+
+	a, err := registry.Get(source)
+	if err != nil {
+		return err
+	}
+
+	cfg, err := a.Read(cmd.Context(), adapter.ReadOptions{
+		Scope:       "project",
+		ProjectRoot: projectRoot,
+	})
+	if err != nil {
+		return fmt.Errorf("read config: %w", err)
+	}
+
+	// Generate canonical JSON for publishing
+	workflowJSON, err := json.MarshalIndent(cfg, "", "  ")
+	if err != nil {
+		return err
+	}
+
+	var tags []string
+	if flowTags != "" {
+		for _, t := range strings.Split(flowTags, ",") {
+			tags = append(tags, strings.TrimSpace(t))
+		}
+	}
+
+	// Generate metadata
+	meta := flowhub.GenerateMetadata(name, source, flowDesc, tags)
+	metaJSON, _ := json.MarshalIndent(meta, "", "  ")
+
+	// Save locally for manual PR submission
+	workflowDir := fmt.Sprintf("flowhub-publish/%s", name)
+	os.MkdirAll(workflowDir, 0755)
+	os.WriteFile(workflowDir+"/workflow.shifter.json", workflowJSON, 0644)
+	os.WriteFile(workflowDir+"/metadata.json", metaJSON, 0644)
+
+	fmt.Printf("✓ Workflow %q ready to publish\n\n", name)
+	fmt.Printf("Files prepared in %s/:\n", workflowDir)
+	fmt.Printf("  ✓ workflow.shifter.json\n")
+	fmt.Printf("  ✓ metadata.json\n\n")
+	fmt.Printf("To publish:\n")
+	fmt.Printf("  1. Fork %s\n", flowhub.RepoURL)
+	fmt.Printf("  2. Add %s/ to workflows/\n", name)
+	fmt.Printf("  3. Create a Pull Request\n")
+	fmt.Printf("\nOr publish via: %s/pulls\n", flowhub.RepoURL)
+
+	return nil
+}
+
+func runFlowList(cmd *cobra.Command, args []string) error {
+	results, err := flowhub.Search("")
+	if err != nil {
+		return fmt.Errorf("fetch failed: %w", err)
+	}
+
+	if len(results) == 0 {
+		fmt.Println("No workflows in FlowHub yet.")
+		fmt.Printf("\nPublish the first one: shifter flow publish <name>\n")
+		return nil
+	}
+
+	fmt.Printf("FlowHub — %d workflows\n\n", len(results))
+	for _, w := range results {
+		fmt.Printf("  📦 %s v%s  ⭐%d  %s\n", w.Name, w.Version, w.Downloads, w.Agent)
+	}
+	return nil
+}
