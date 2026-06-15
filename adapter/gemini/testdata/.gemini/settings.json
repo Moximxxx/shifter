@@ -1,0 +1,65 @@
+{
+  "general": {
+    "vimMode": true,
+    "defaultApprovalMode": "auto_edit"
+  },
+  "ui": {
+    "theme": "GitHub"
+  },
+  "model": {
+    "name": "gemini-2.5-pro"
+  },
+  "tools": {
+    "allowed": [
+      "run_shell_command(npm:*)",
+      "run_shell_command(go:*)",
+      "run_shell_command(git:*)",
+      "run_shell_command(docker:*)",
+      "run_shell_command(bun:*)"
+    ],
+    "exclude": [
+      "run_shell_command(rm -rf /*)",
+      "run_shell_command(shutdown)",
+      "run_shell_command(mkfs.*)",
+      "run_shell_command(dd if=*)"
+    ]
+  },
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "/tmp"
+      ],
+      "timeout": 5000
+    },
+    "github": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "-e",
+        "GITHUB_PERSONAL_ACCESS_TOKEN",
+        "ghcr.io/github/github-mcp-server"
+      ],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}"
+      },
+      "timeout": 15000,
+      "trust": true
+    },
+    "postgres": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-postgres"
+      ],
+      "env": {
+        "DATABASE_URL": "${DATABASE_URL}"
+      },
+      "timeout": 10000
+    }
+  }
+}

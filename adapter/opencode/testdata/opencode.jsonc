@@ -1,0 +1,122 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+
+  "$schema": "https://opencode.ai/config.json",
+  "model": "deepseek/deepseek-v4-flash",
+  "small_model": "deepseek/deepseek-v4-flash",
+  "default_agent": "coordinator",
+  "lsp": true,
+  "compaction": {
+    "auto": true,
+    "prune": true
+  },
+  "instructions": [
+    "AGENTS.md",
+    ".opencode/rules/R-01_source-modification-contract.md",
+    ".opencode/rules/R-02_coverage-all-files.md",
+    ".opencode/rules/R-03_coverage-closure.md",
+    ".opencode/rules/R-04_status-update.md",
+    ".opencode/rules/R-05_contract-naming.md",
+    ".opencode/rules/R-06_workflow-integrity.md",
+    ".opencode/rules/R-07_contract-scope.md",
+    ".opencode/rules/R-08_coordinator-gate.md",
+    ".opencode/rules/R-09_web-search-timestamp.md",
+    ".opencode/rules/R-10_builder-workspace-clean.md",
+    ".opencode/rules/R-11_no-indiscriminate-kill.md",
+    ".opencode/rules/R-12_background-process-management.md",
+    ".opencode/rules/R-13_heartbeat-required.md",
+    ".opencode/rules/R-14_auto-retry-loop.md",
+    ".opencode/rules/R-15_hook-implementation.md",
+    ".opencode/rules/R-16_trace-id.md",
+    ".opencode/rules/R-17_six-pillars-coverage.md",
+    ".opencode/rules/R-18_model-list-consistency.md"
+  ],
+  "permission": {
+    "read": {
+      "*": "allow",
+      "*.env": "deny",
+      "*.env.*": "deny",
+      "*.env.example": "allow"
+    },
+    "skill": "allow",
+    "task": "deny"
+  },
+  "agent": {
+    "analyzer": {
+      "description": "分析智能体，纯分析不决策。负责方案对比、依赖追踪、影响评估、架构审计。只读。",
+      "mode": "subagent",
+      "color": "#C9B1FF",
+      "temperature": 0.1,
+      "steps": 15,
+      "prompt": "{file:./.opencode/agents/analyzer.md}",
+      "model": "deepseek/deepseek-v4-pro"
+    },
+    "builder": {
+      "description": "构建者，负责执行构建、部署、验证。不改源码。",
+      "mode": "subagent",
+      "color": "#96CEB4",
+      "temperature": 0.1,
+      "steps": 25,
+      "prompt": "{file:./.opencode/agents/builder.md}",
+      "model": "deepseek/deepseek-v4-flash"
+    },
+    "code-reviewer": {
+      "description": "代码审查者，审查代码质量、安全性和最佳实践。只读。",
+      "mode": "subagent",
+      "color": "#DDA0DD",
+      "temperature": 0.1,
+      "steps": 15,
+      "prompt": "{file:./.opencode/agents/code-reviewer.md}",
+      "model": "deepseek/deepseek-v4-flash"
+    },
+    "coordinator": {
+      "description": "任务协调者。负责任务拆分、委派执行、验证结果。一切任务的入口与出口。",
+      "mode": "primary",
+      "color": "#FF6B6B",
+      "temperature": 0.2,
+      "prompt": "{file:./.opencode/agents/coordinator.md}",
+      "model": "deepseek/deepseek-v4-pro",
+      "permission": {
+        "edit": {
+          "*": "deny",
+          ".opencode/contracts/**": "allow"
+        },
+        "task": "allow"
+      }
+    },
+    "retro": {
+      "description": "复盘者，负责任务完成后复盘、约束更新、事故记录。不可委派其他子 Agent。",
+      "mode": "subagent",
+      "hidden": true,
+      "color": "#ABEBC6",
+      "temperature": 0.3,
+      "prompt": "{file:./.opencode/agents/retro.md}",
+      "model": "deepseek/deepseek-v4-pro",
+      "permission": {
+        "edit": {
+          "*": "deny",
+          ".opencode/incidents/**": "allow",
+          ".opencode/retros/**": "allow"
+        }
+      }
+    },
+    "task-executor": {
+      "description": "任务执行者，按合同规范编写代码。仅修改合同中 files_to_modify 指定的文件。",
+      "mode": "subagent",
+      "color": "#45B7D1",
+      "temperature": 0.3,
+      "steps": 50,
+      "prompt": "{file:./.opencode/agents/task-executor.md}",
+      "model": "deepseek/deepseek-v4-flash"
+    },
+    "tester": {
+      "description": "统一测试者，负责 E2E 测试、单元测试运行、UI 冒烟测试。不改源码。",
+      "mode": "subagent",
+      "color": "#F0B27A",
+      "temperature": 0.2,
+      "steps": 30,
+      "prompt": "{file:./.opencode/agents/tester.md}",
+      "model": "deepseek/deepseek-v4-flash"
+    }
+  }
+}
