@@ -10,12 +10,13 @@ import (
 
 // Result holds detection info for a single agent.
 type Result struct {
-	ID      string                  `json:"id"`
-	Name    string                  `json:"name"`
-	Found   bool                    `json:"found"`
-	Paths   []string                `json:"paths,omitempty"`
-	Summary map[string]int          `json:"summary,omitempty"`
-	Error   string                  `json:"error,omitempty"`
+	ID               string         `json:"id"`
+	Name             string         `json:"name"`
+	Found            bool           `json:"found"`
+	HasProjectConfig bool           `json:"has_project_config,omitempty"`
+	Paths            []string       `json:"paths,omitempty"`
+	Summary          map[string]int `json:"summary,omitempty"`
+	Error            string         `json:"error,omitempty"`
 }
 
 // ScanAll concurrently detects all registered coding agents.
@@ -51,7 +52,8 @@ func ScanAll() []Result {
 			r := Result{
 				ID:      agentID,
 				Name:    a.Name(),
-				Found:   dr.Found,
+				Found:            dr.Found,
+			HasProjectConfig: dr.ProjectPath != "",
 				Summary: dr.Summary,
 			}
 			r.Paths = append(r.Paths, dr.GlobalPaths...)

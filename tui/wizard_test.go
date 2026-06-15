@@ -43,8 +43,8 @@ func TestWizard_MenuNavigation(t *testing.T) {
 	m := NewWizardModel()
 	m.screen = WizMenu
 	m.detectResults = []detect.Result{
-		{ID: "claude-code", Name: "Claude Code", Found: true},
-		{ID: "codex", Name: "Codex CLI", Found: true},
+		{ID: "claude-code", Name: "Claude Code", Found: true, HasProjectConfig: true},
+		{ID: "codex", Name: "Codex CLI", Found: true, HasProjectConfig: true},
 	}
 
 	// Verify initial state
@@ -86,7 +86,7 @@ func TestWizard_Save_SingleAgent_SkipsSelection(t *testing.T) {
 	m.screen = WizMenu
 	m.cursorIdx = 0 // Save
 	m.detectResults = []detect.Result{
-		{ID: "claude-code", Name: "Claude Code", Found: true},
+		{ID: "claude-code", Name: "Claude Code", Found: true, HasProjectConfig: true},
 	}
 
 	m = sendKey(m, "enter")
@@ -112,8 +112,8 @@ func TestWizard_Save_MultipleAgents_ShowsSelection(t *testing.T) {
 	m.screen = WizMenu
 	m.cursorIdx = 0 // Save
 	m.detectResults = []detect.Result{
-		{ID: "claude-code", Name: "Claude Code", Found: true},
-		{ID: "codex", Name: "Codex CLI", Found: true},
+		{ID: "claude-code", Name: "Claude Code", Found: true, HasProjectConfig: true},
+		{ID: "codex", Name: "Codex CLI", Found: true, HasProjectConfig: true},
 	}
 
 	m = sendKey(m, "enter")
@@ -149,7 +149,7 @@ func TestWizard_Port_SingleAgent_SkipsSourceSelection(t *testing.T) {
 	m.screen = WizMenu
 	m.cursorIdx = 2 // Port
 	m.detectResults = []detect.Result{
-		{ID: "claude-code", Name: "Claude Code", Found: true},
+		{ID: "claude-code", Name: "Claude Code", Found: true, HasProjectConfig: true},
 	}
 
 	m = sendKey(m, "enter")
@@ -172,9 +172,9 @@ func TestWizard_Port_MultipleAgents_ShowsSourceSelection(t *testing.T) {
 	m.screen = WizMenu
 	m.cursorIdx = 2 // Port
 	m.detectResults = []detect.Result{
-		{ID: "claude-code", Name: "Claude Code", Found: true},
-		{ID: "codex", Name: "Codex CLI", Found: true},
-		{ID: "opencode", Name: "OpenCode", Found: true},
+		{ID: "claude-code", Name: "Claude Code", Found: true, HasProjectConfig: true},
+		{ID: "codex", Name: "Codex CLI", Found: true, HasProjectConfig: true},
+		{ID: "opencode", Name: "OpenCode", Found: true, HasProjectConfig: true},
 	}
 
 	m = sendKey(m, "enter")
@@ -193,7 +193,7 @@ func TestWizard_Esc_Navigation(t *testing.T) {
 	m.screen = WizMenu
 	m.cursorIdx = 2 // Port
 	m.detectResults = []detect.Result{
-		{ID: "claude-code", Name: "Claude Code", Found: true},
+		{ID: "claude-code", Name: "Claude Code", Found: true, HasProjectConfig: true},
 	}
 
 	// Enter Port → should go to PortSelectTarget (single agent, skips source)
@@ -304,8 +304,8 @@ func TestWizard_Esc_FromSubScreen_DoesNotQuit(t *testing.T) {
 func TestWizard_Views_NoPanic(t *testing.T) {
 	m := NewWizardModel()
 	m.detectResults = []detect.Result{
-		{ID: "claude-code", Name: "Claude Code", Found: true, Summary: map[string]int{"agents": 2}},
-		{ID: "codex", Name: "Codex CLI", Found: true},
+		{ID: "claude-code", Name: "Claude Code", Found: true, HasProjectConfig: true, Summary: map[string]int{"agents": 2}},
+		{ID: "codex", Name: "Codex CLI", Found: true, HasProjectConfig: true},
 	}
 
 	screens := []WizardScreen{
@@ -334,9 +334,9 @@ func TestWizard_Views_NoPanic(t *testing.T) {
 func TestWizard_FoundAgents(t *testing.T) {
 	m := NewWizardModel()
 	m.detectResults = []detect.Result{
-		{ID: "a", Found: true},
+		{ID: "a", Found: true, HasProjectConfig: true},
 		{ID: "b", Found: false},
-		{ID: "c", Found: true},
+		{ID: "c", Found: true, HasProjectConfig: true},
 	}
 
 	agents := m.foundAgents()
@@ -356,8 +356,8 @@ func TestWizard_FirstFoundIdx(t *testing.T) {
 	m := NewWizardModel()
 	m.detectResults = []detect.Result{
 		{ID: "a", Found: false},
-		{ID: "b", Found: true},
-		{ID: "c", Found: true},
+		{ID: "b", Found: true, HasProjectConfig: true},
+		{ID: "c", Found: true, HasProjectConfig: true},
 	}
 
 	idx := m.firstFoundIdx()

@@ -98,6 +98,9 @@ type WizardModel struct {
 	aspects   []aspectItem
 	sourceID  string
 	targetID  string
+
+	// Result banner shown on menu after operation
+	resultBanner string
 }
 
 // TUI version string
@@ -141,29 +144,32 @@ func (m WizardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case profileSaveMsg:
 		m.loading = false
-		m.doneMsg = fmt.Sprintf("✓ Profile %q saved!\n\n%s", msg.name, msg.summary)
-		m.screen = WizSaveDone
+		m.resultBanner = fmt.Sprintf("✓ Profile %q saved (%s)", msg.name, msg.summary)
+		m.screen = WizMenu
+		m.cursorIdx = 0
 
 	case portDoneMsg:
 		m.loading = false
 		if msg.result != nil {
-			m.doneMsg = fmt.Sprintf("✓ Port Complete: %s → %s\n\n%d files written, %d warnings",
+			m.resultBanner = fmt.Sprintf("✓ Port: %s → %s — %d files, %d warnings",
 				msg.result.Source, msg.result.Target,
 				len(msg.result.FilesWritten), len(msg.result.LossWarnings))
 		}
-		m.screen = WizPortDone
+		m.screen = WizMenu
+		m.cursorIdx = 0
 
 	case loadDoneMsg:
 		m.loading = false
-		m.doneMsg = fmt.Sprintf("✓ Profile %q applied to %s\n\n%d files written",
+		m.resultBanner = fmt.Sprintf("✓ Profile %q applied to %s (%d files)",
 			msg.profileName, msg.target, len(msg.files))
-		m.screen = WizLoadDone
+		m.screen = WizMenu
+		m.cursorIdx = 0
 
 	case error:
 		m.loading = false
-		m.errorMsg = msg.Error()
-		m.doneMsg = "❌ Error: " + m.errorMsg
-		m.screen = WizSaveDone
+		m.resultBanner = "❌ " + msg.Error()
+		m.screen = WizMenu
+		m.cursorIdx = 0
 
 	case tea.KeyMsg:
 		if m.inputMode {
@@ -191,7 +197,7 @@ func (m WizardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 
 		case "q":
-			if m.screen == WizWelcome || m.screen == WizMenu || m.screen == WizSaveDone || m.screen == WizLoadDone || m.screen == WizPortDone {
+			if m.screen == WizWelcome || m.screen == WizMenu {
 				m.quitting = true
 				return m, tea.Quit
 			}
@@ -235,6 +241,13 @@ func (m *WizardModel) handleInputMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.inputMode = false
 			return m.handleSaveProfile()
 		}
+	case "esc", "ctrl+c":
+		// Cancel input — go back to menu
+		m.inputMode = false
+		m.screen = WizMenu
+		m.cursorIdx = 0
+		m.inputText = ""
+		return m, nil
 	case "backspace":
 		if len(m.inputText) > 0 {
 			m.inputText = m.inputText[:len(m.inputText)-1]
@@ -545,7 +558,8 @@ func (m *WizardModel) firstFoundIdx() int {
 func (m *WizardModel) foundAgents() []detect.Result {
 	var f []detect.Result
 	for _, r := range m.detectResults {
-		if r.Found {
+		// Only include agents with project-level config
+		if r.Found && r.HasProjectConfig {
 			f = append(f, r)
 		}
 	}
@@ -663,6 +677,12 @@ func (m WizardModel) viewMenu() string {
 	b.WriteString("\n")
 	b.WriteString(styles.MutedText.Render(tuiVersion))
 	b.WriteString("\n\n")
+	// Result banner (from save/load/port operations)
+	if m.resultBanner != "" {
+		b.WriteString(styles.Border.Render(m.resultBanner))
+		b.WriteString("\n\n")
+	}
+
 	b.WriteString(styles.Title.Render("🔄 " + i18n.T("menu.title")))
 	b.WriteString("\n\n")
 
