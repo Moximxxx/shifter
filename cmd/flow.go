@@ -205,16 +205,42 @@ func runFlowPublish(cmd *cobra.Command, args []string) error {
 	meta := flowhub.GenerateMetadata(name, source, flowDesc, tags)
 	metaJSON, _ := json.MarshalIndent(meta, "", "  ")
 
+	// Auto-generate README
+	readme := fmt.Sprintf(`# %s
+
+%s
+
+## Agent
+%s
+
+## Tags
+%s
+
+## Install
+`+"`"+`sh
+shifter flow install %s
+`+"`"+`
+
+## Contents
+- Agents: %d
+- Skills: %d
+- MCP Servers: %d
+- Hooks: %d
+`, name, flowDesc, source, strings.Join(tags, ", "), name,
+		len(cfg.Agents), len(cfg.Skills), len(cfg.MCPServers), len(cfg.Hooks))
+
 	// Save locally for manual PR submission
 	workflowDir := fmt.Sprintf("flowhub-publish/%s", name)
 	os.MkdirAll(workflowDir, 0755)
 	os.WriteFile(workflowDir+"/workflow.shifter.json", workflowJSON, 0644)
 	os.WriteFile(workflowDir+"/metadata.json", metaJSON, 0644)
+	os.WriteFile(workflowDir+"/README.md", []byte(readme), 0644)
 
 	fmt.Printf("✓ Workflow %q ready to publish\n\n", name)
 	fmt.Printf("Files prepared in %s/:\n", workflowDir)
 	fmt.Printf("  ✓ workflow.shifter.json\n")
-	fmt.Printf("  ✓ metadata.json\n\n")
+	fmt.Printf("  ✓ metadata.json\n")
+	fmt.Printf("  ✓ README.md\n\n")
 	fmt.Printf("To publish:\n")
 	fmt.Printf("  1. Fork %s\n", flowhub.RepoURL)
 	fmt.Printf("  2. Add %s/ to workflows/\n", name)
