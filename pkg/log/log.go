@@ -40,7 +40,7 @@ func Init() error {
 	logFile = f
 	enabled = true
 	// Use write directly to avoid double-lock (Init holds mu)
-	ts := time.Now().Format("15:04:05.000")
+	ts := time.Now().Format("2006-01-02 15:04:05")
 	fmt.Fprintf(f, "%s [INFO] log: session started\n", ts)
 	return nil
 }
@@ -70,7 +70,7 @@ func write(level, category, format string, args ...interface{}) {
 	if logFile == nil {
 		return
 	}
-	ts := time.Now().Format("15:04:05.000")
+	ts := time.Now().Format("2006-01-02 15:04:05")
 	msg := fmt.Sprintf(format, args...)
 	fmt.Fprintf(logFile, "%s [%s] %s: %s\n", ts, level, category, msg)
 }
