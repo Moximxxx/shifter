@@ -13,6 +13,7 @@ import (
 	"github.com/moximxxx/shifter/engine/detect"
 	"github.com/moximxxx/shifter/engine/flowhub"
 	"github.com/moximxxx/shifter/registry"
+	"github.com/moximxxx/shifter/tui"
 )
 
 var flowCmd = &cobra.Command{
@@ -251,7 +252,5 @@ shifter flow install %s
 }
 
 func runFlowList(cmd *cobra.Command, args []string) error {
-	// Launch TUI FlowHub view directly
-	LaunchTUI()
-	return nil
+	return tui.StandaloneFlowHub()
 }
