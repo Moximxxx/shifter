@@ -96,10 +96,10 @@ func runFlowSearch(cmd *cobra.Command, args []string) error {
 		if len(w.Tags) > 0 {
 			fmt.Printf("  •  %s", strings.Join(w.Tags, ", "))
 		}
-		fmt.Println("\n")
+		fmt.Println()
 	}
 
-	fmt.Printf("Install: shifter flow install <name>\n")
+	fmt.Println("Install: shifter flow install <name>")
 	return nil
 }
 
