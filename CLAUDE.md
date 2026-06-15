@@ -113,3 +113,15 @@ shifter/
 - 目录：使用 `paths.MustHomeDir()` 替代 `os.UserHomeDir()`
 - i18n：所有 TUI 字符串通过 `i18n.T("key")` 获取，中英文在 `pkg/i18n/locales/`
 - Logging：`--log` 标志启用，写入 `~/.shifter/logs/shifter-YYYYMMDD.log`
+
+## Rules
+
+### R-01: i18n Required for All User-Facing Strings
+
+所有面向用户的字符串必须通过 `i18n.T("key")` 获取，中英文翻译文件分别在 `pkg/i18n/locales/en.json` 和 `zh.json`。
+
+- 新增 TUI 文字 → 必须添加中英文翻译
+- 新增 CLI 输出 → 考虑使用 i18n 翻译
+- 提交前检查 `pkg/i18n/locales/` 两个文件是否同步更新
+
+详见: [docs/rules/R-01-i18n.md](docs/rules/R-01-i18n.md)

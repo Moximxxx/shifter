@@ -75,5 +75,11 @@
   "error.write_failed": "Failed to write {agent} config",
   "templates.title": "Saved Workflows",
   "save.desc_prompt": "Description (optional)",
-  "save.desc_hint": "brief description of this workflow, or leave empty"
+  "save.desc_hint": "brief description of this workflow, or leave empty",
+  "flowhub.title": "FlowHub — Workflow Marketplace",
+  "flowhub.loading": "Loading workflows from FlowHub...",
+  "flowhub.search": "Search",
+  "flowhub.no_results": "No workflows match your search.",
+  "flowhub.help": "Type to search • Enter to toggle • Esc back",
+  "flowhub.install_hint": "To install: shifter flow install"
 }

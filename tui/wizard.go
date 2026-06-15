@@ -12,6 +12,7 @@ import (
 	"github.com/moximxxx/shifter/adapter"
 	"github.com/moximxxx/shifter/canonical"
 	"github.com/moximxxx/shifter/engine/detect"
+	"github.com/moximxxx/shifter/engine/flowhub"
 	"github.com/moximxxx/shifter/engine/port"
 	"github.com/moximxxx/shifter/engine/profile"
 	"github.com/moximxxx/shifter/pkg/i18n"
@@ -106,6 +107,12 @@ type WizardModel struct {
 
 	// Result banner shown on menu after operation
 	resultBanner string
+
+	// FlowHub
+	flowhubResults []flowhub.Workflow
+	flowhubLoaded bool
+	flowhubQuery  string
+	flowhubCursor int
 }
 
 // TUI version string
@@ -146,6 +153,10 @@ func (m WizardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case profileListMsg:
 		m.profileList = msg.profiles
 		m.profilesLoaded = true
+
+	case flowhubResultsMsg:
+		m.flowhubResults = msg.results
+		m.flowhubLoaded = true
 
 	case profileSaveMsg:
 		m.loading = false
@@ -208,6 +219,10 @@ func (m WizardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 
 		case "up", "k":
+			if m.screen == WizFlowHub && m.flowhubCursor > 0 {
+				m.flowhubCursor--
+				return m, nil
+			}
 			if m.screen == WizWelcome || m.screen == WizSettings {
 				if m.langChoice > 0 {
 					m.langChoice--
@@ -218,6 +233,13 @@ func (m WizardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.cursorIdx--
 			}
 		case "down", "j":
+			if m.screen == WizFlowHub {
+				filtered := getFiltered(m)
+				if m.flowhubCursor < len(filtered)-1 {
+					m.flowhubCursor++
+				}
+				return m, nil
+			}
 			if m.screen == WizWelcome || m.screen == WizSettings {
 				if m.langChoice < 1 {
 					m.langChoice++
@@ -228,6 +250,10 @@ func (m WizardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.cursorIdx++
 			}
 		case "enter":
+			if m.screen == WizFlowHub && m.inputMode {
+				m.inputMode = false
+				return m, nil
+			}
 			return m.handleEnter()
 		case " ":
 			if m.screen == WizPortAspects && m.cursorIdx < len(m.aspects) {
@@ -242,6 +268,10 @@ func (m WizardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m *WizardModel) handleInputMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	switch msg.String() {
 	case "enter":
+		if m.screen == WizFlowHub {
+			m.inputMode = false
+			return m, nil
+		}
 		if m.inputText == "" {
 			return m, nil
 		}
@@ -582,6 +612,15 @@ type loadDoneMsg struct {
 
 type profileListMsg struct {
 	profiles []profile.Profile
+}
+
+type flowhubResultsMsg struct {
+	results []flowhub.Workflow
+}
+
+func fetchFlowHubCmd() tea.Msg {
+	results, _ := flowhub.Search("")
+	return flowhubResultsMsg{results: results}
 }
 
 func loadProfilesCmd() tea.Msg {
@@ -952,19 +991,55 @@ func (m WizardModel) viewTemplateDetail() string {
 
 func (m WizardModel) viewFlowHub() string {
 	var b strings.Builder
-	b.WriteString(styles.Title.Render("🌐 FlowHub — Workflow Marketplace"))
+	b.WriteString(styles.Title.Render("🌐 " + i18n.T("flowhub.title")))
 	b.WriteString("\n\n")
-	b.WriteString(styles.MutedText.Render("GitHub-backed, zero-cost workflow sharing"))
+
+	if !m.flowhubLoaded {
+		b.WriteString("Loading workflows from FlowHub...\n")
+		b.WriteString("\n" + styles.HelpBar.Render("Esc "+i18n.T("help.back")))
+		return b.String()
+	}
+
+	// Search box
+	b.WriteString("🔍 " + i18n.T("flowhub.search") + ": ")
+	b.WriteString(styles.ActiveItem.Render(m.flowhubQuery))
+	if !m.inputMode {
+		b.WriteString("_")
+	}
 	b.WriteString("\n\n")
-	b.WriteString("Available via CLI:\n\n")
-	b.WriteString("  shifter flow search     # Browse workflows\n")
-	b.WriteString("  shifter flow install    # Install a workflow\n")
-	b.WriteString("  shifter flow publish    # Share your workflow\n")
-	b.WriteString("  shifter flow list       # List all workflows\n")
+
+	// Filter results
+	var filtered []flowhub.Workflow
+	q := strings.ToLower(m.flowhubQuery)
+	for _, w := range m.flowhubResults {
+		if q == "" || strings.Contains(strings.ToLower(w.Name), q) ||
+			strings.Contains(strings.ToLower(w.Description), q) {
+			filtered = append(filtered, w)
+		}
+	}
+
+	if len(filtered) == 0 {
+		b.WriteString(styles.MutedText.Render(i18n.T("flowhub.no_results")))
+		b.WriteString("\n")
+	} else {
+		for i, w := range filtered {
+			line := fmt.Sprintf("%s v%s  ⭐%d", w.Name, w.Version, w.Downloads)
+			if i == m.flowhubCursor {
+				b.WriteString(styles.ActiveItem.Render("❯ " + line))
+			} else {
+				b.WriteString(styles.InactiveItem.Render("  " + line))
+			}
+			b.WriteString("\n")
+			b.WriteString(styles.MutedText.Render(fmt.Sprintf("      %s  |  %s", w.Description, w.Agent)))
+			if len(w.Tags) > 0 {
+				b.WriteString(styles.MutedText.Render(fmt.Sprintf("  |  %s", strings.Join(w.Tags, ", "))))
+			}
+			b.WriteString("\n")
+		}
+	}
+
 	b.WriteString("\n")
-	b.WriteString(fmt.Sprintf("Visit: github.com/Moximxxx/flowhub\n"))
-	b.WriteString("\n")
-	b.WriteString(styles.HelpBar.Render(i18n.T("help.back")))
+	b.WriteString(styles.HelpBar.Render("Type to search • Enter install • Esc "+i18n.T("help.back")))
 	return b.String()
 }
 
@@ -1023,4 +1098,17 @@ func (m WizardModel) viewAspectsSelect() string {
 	b.WriteString("\n")
 	b.WriteString(styles.HelpBar.Render(i18n.T("help.navigate") + " • " + i18n.T("help.toggle") + " • " + i18n.T("help.apply") + " • " + i18n.T("help.back")))
 	return b.String()
+}
+
+// getFiltered returns FlowHub results matching current query
+func getFiltered(m WizardModel) []flowhub.Workflow {
+	q := strings.ToLower(m.flowhubQuery)
+	var filtered []flowhub.Workflow
+	for _, w := range m.flowhubResults {
+		if q == "" || strings.Contains(strings.ToLower(w.Name), q) ||
+			strings.Contains(strings.ToLower(w.Description), q) {
+			filtered = append(filtered, w)
+		}
+	}
+	return filtered
 }

@@ -251,20 +251,7 @@ shifter flow install %s
 }
 
 func runFlowList(cmd *cobra.Command, args []string) error {
-	results, err := flowhub.Search("")
-	if err != nil {
-		return fmt.Errorf("fetch failed: %w", err)
-	}
-
-	if len(results) == 0 {
-		fmt.Println("No workflows in FlowHub yet.")
-		fmt.Printf("\nPublish the first one: shifter flow publish <name>\n")
-		return nil
-	}
-
-	fmt.Printf("FlowHub — %d workflows\n\n", len(results))
-	for _, w := range results {
-		fmt.Printf("  📦 %s v%s  ⭐%d  %s\n", w.Name, w.Version, w.Downloads, w.Agent)
-	}
+	// Launch TUI FlowHub view directly
+	LaunchTUI()
 	return nil
 }

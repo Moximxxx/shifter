@@ -75,5 +75,11 @@
   "error.write_failed": "写入 {agent} 配置失败",
   "templates.title": "已保存的工作流列表",
   "save.desc_prompt": "简介（可选）",
-  "save.desc_hint": "简短描述此工作流，或留空"
+  "save.desc_hint": "简短描述此工作流，或留空",
+  "flowhub.title": "FlowHub — 工作流市场",
+  "flowhub.loading": "正在从 FlowHub 加载工作流...",
+  "flowhub.search": "搜索",
+  "flowhub.no_results": "没有匹配的工作流。",
+  "flowhub.help": "输入搜索 • Enter 切换 • Esc 返回",
+  "flowhub.install_hint": "安装: shifter flow install"
 }
