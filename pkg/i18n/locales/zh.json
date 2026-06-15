@@ -16,8 +16,8 @@
   "menu.port": "🔀 迁移 — 在两个 Agent 之间迁移配置",
   "save.title": "💾 保存模板 — 选择 Agent",
   "save.subtitle": "要保存哪个 Agent 的配置？",
-  "save.name_prompt": "模板名称:",
-  "save.name_hint": "（字母、数字、连字符、下划线）",
+  "save.name_prompt": "模板名称",
+  "save.name_hint": "字母、数字、连字符、下划线",
   "save.name_placeholder": "我的工作流",
   "save.saving": "正在保存 {agent} 的配置...",
   "save.done": "✓ 模板 \"{name}\" 已保存！",
@@ -73,5 +73,7 @@
   "error.unknown_agent": "未知 Agent: {agent}",
   "error.read_failed": "读取 {agent} 配置失败",
   "error.write_failed": "写入 {agent} 配置失败",
-  "templates.title": "已保存的工作流列表"
+  "templates.title": "已保存的工作流列表",
+  "save.desc_prompt": "简介（可选）",
+  "save.desc_hint": "简短描述此工作流，或留空"
 }

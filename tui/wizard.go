@@ -50,6 +50,7 @@ const (
 	WizMenu
 	WizSaveSelectAgent
 	WizSaveName
+	WizSaveDesc
 	WizSaveDone
 	WizLoadSelectProfile
 	WizLoadSelectTarget
@@ -95,6 +96,7 @@ type WizardModel struct {
 	selectedAgentID string
 	selectedProfile *profile.Profile
 	selectedTarget  string
+	saveDesc        string // description for save workflow
 
 	// Aspect checkboxes
 	aspects   []aspectItem
@@ -239,10 +241,20 @@ func (m WizardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m *WizardModel) handleInputMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	switch msg.String() {
 	case "enter":
-		if m.inputText != "" {
-			m.inputMode = false
-			return m.handleSaveProfile()
+		if m.inputText == "" {
+			return m, nil
 		}
+		m.inputMode = false
+		if m.screen == WizSaveName {
+			// Name done → go to description input
+			m.saveDesc = "" // reset
+			m.screen = WizSaveDesc
+			m.inputMode = true
+			m.inputText = ""
+			return m, nil
+		}
+		// Description done → save
+		return m.handleSaveProfile()
 	case "esc", "ctrl+c":
 		// Cancel input — go back to menu
 		m.inputMode = false
@@ -478,7 +490,7 @@ func (m *WizardModel) handleSaveProfile() (tea.Model, tea.Cmd) {
 
 		p := profile.Profile{
 			Name:        m.inputText,
-			Description: fmt.Sprintf("%s config captured from project", a.Name()),
+			Description: m.saveDesc,
 			SourceAgent: m.selectedAgentID,
 			Config:      cfg,
 			CreatedAt:   time.Now(),
@@ -645,7 +657,9 @@ func (m WizardModel) viewCurrentScreen() string {
 	case WizSaveSelectAgent:
 		return m.viewHeader() + "\n" + m.viewAgentSelect(i18n.T("save.title"), i18n.T("save.subtitle"))
 	case WizSaveName:
-		return m.viewHeader() + "\n" + m.viewNameInput()
+		return m.viewHeader() + "\n" + m.viewInput("💾 Profile Name", "save.name_prompt", "save.name_hint")
+	case WizSaveDesc:
+		return m.viewHeader() + "\n" + m.viewInput("💾 Profile Description", "save.desc_prompt", "save.desc_hint")
 	case WizPortSelectSource:
 		return m.viewHeader() + "\n" + m.viewAgentSelect(i18n.T("port.title"), i18n.T("port.source_subtitle"))
 	case WizPortSelectTarget:
@@ -786,21 +800,29 @@ func (m WizardModel) viewAgentSelect(title, subtitle string) string {
 	return b.String()
 }
 
-func (m WizardModel) viewNameInput() string {
+func (m WizardModel) viewInput(title, promptKey, hintKey string) string {
 	var b strings.Builder
-	b.WriteString(styles.Title.Render("💾 Save Profile — Name"))
+	b.WriteString(styles.Title.Render(title))
 	b.WriteString("\n\n")
-	b.WriteString(fmt.Sprintf("Saving config from: %s\n\n", m.selectedAgentID))
-	b.WriteString("Profile name: ")
+	b.WriteString(i18n.T(promptKey))
+	b.WriteString(": ")
 	b.WriteString(styles.ActiveItem.Render(m.inputText))
 	if !m.inputMode {
 		b.WriteString("_")
 	}
 	b.WriteString("\n\n")
-	b.WriteString(styles.MutedText.Render("(letters, numbers, hyphens, underscores)"))
+	b.WriteString(styles.MutedText.Render(i18n.T(hintKey)))
 	b.WriteString("\n\n")
 	b.WriteString(styles.HelpBar.Render(i18n.T("help.type_name")))
 	return b.String()
+}
+
+func (m WizardModel) viewNameInput() string {
+	return m.viewInput(
+		"💾 Save Profile — Name",
+		"save.name_prompt",
+		"save.name_hint",
+	)
 }
 
 func (m WizardModel) viewProfileSelect() string {
@@ -858,9 +880,9 @@ func (m WizardModel) viewTemplates() string {
 	}
 
 	for i, p := range m.profileList {
-		line := fmt.Sprintf("  %s", p.Name)
-		if p.SourceAgent != "" {
-			line += fmt.Sprintf("  (from %s)", p.SourceAgent)
+		line := fmt.Sprintf("%s", p.Name)
+		if p.Description != "" {
+			line += fmt.Sprintf(" — %s", p.Description)
 		}
 		if i == m.cursorIdx {
 			b.WriteString(styles.ActiveItem.Render("❯ " + line))
@@ -869,9 +891,6 @@ func (m WizardModel) viewTemplates() string {
 		}
 		b.WriteString("\n")
 		b.WriteString(styles.MutedText.Render(fmt.Sprintf("      %s", p.Summary())))
-		if p.Description != "" {
-			b.WriteString("\n" + styles.MutedText.Render(fmt.Sprintf("      %s", p.Description)))
-		}
 		b.WriteString("\n")
 	}
 

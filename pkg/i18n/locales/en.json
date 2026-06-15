@@ -16,8 +16,8 @@
   "menu.port": "🔀 Port — Transfer config between two agents in this project",
   "save.title": "💾 Save Profile — Select Agent",
   "save.subtitle": "Which agent's config do you want to save?",
-  "save.name_prompt": "Profile name:",
-  "save.name_hint": "(letters, numbers, hyphens, underscores)",
+  "save.name_prompt": "Profile name",
+  "save.name_hint": "letters, numbers, hyphens, underscores",
   "save.name_placeholder": "my-workflow",
   "save.saving": "Saving config from: {agent}",
   "save.done": "✓ Profile \"{name}\" saved!",
@@ -73,5 +73,7 @@
   "error.unknown_agent": "Unknown agent: {agent}",
   "error.read_failed": "Failed to read {agent} config",
   "error.write_failed": "Failed to write {agent} config",
-  "templates.title": "Saved Workflows"
+  "templates.title": "Saved Workflows",
+  "save.desc_prompt": "Description (optional)",
+  "save.desc_hint": "brief description of this workflow, or leave empty"
 }
