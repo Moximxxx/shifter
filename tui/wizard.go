@@ -996,7 +996,7 @@ func (m WizardModel) viewFlowHub() string {
 
 	if !m.flowhubLoaded {
 		b.WriteString("Loading workflows from FlowHub...\n")
-		b.WriteString("\n" + styles.HelpBar.Render("Esc "+i18n.T("help.back")))
+		b.WriteString("\n" + styles.HelpBar.Render(i18n.T("help.back")))
 		return b.String()
 	}
 
