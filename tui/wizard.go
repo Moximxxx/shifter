@@ -348,16 +348,16 @@ func (m *WizardModel) handleEnter() (tea.Model, tea.Cmd) {
 		case 3: // Templates
 			m.prevScreen = WizMenu
 			m.backStack = append(m.backStack, m.screen)
-			m.screen = WizSettings
-			m.cursorIdx = 0
-		case 4: // Settings
-			m.prevScreen = WizMenu
-			m.backStack = append(m.backStack, m.screen)
 			m.screen = WizTemplates
 			m.cursorIdx = 0
 			if !m.profilesLoaded {
 				return m, loadProfilesCmd
 			}
+		case 4: // Settings
+			m.prevScreen = WizMenu
+			m.backStack = append(m.backStack, m.screen)
+			m.screen = WizSettings
+			m.cursorIdx = 0
 			// Preselect current language
 			if i18n.Lang() == "zh" {
 				m.langChoice = 1
