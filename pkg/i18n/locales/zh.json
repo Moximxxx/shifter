@@ -58,7 +58,7 @@
   "help.quit": "q 退出",
   "help.apply": "Enter 执行",
   "help.type_name": "输入名称 • Enter 保存 • Esc 返回",
-  "settings.title": "设置",
+  "settings.title": "Shifter 全局配置",
   "settings.language": "语言",
   "settings.language_changed": "语言已切换为: {lang}",
   "settings.restart_hint": "重启 shifter 以应用更改。",
@@ -73,5 +73,5 @@
   "error.unknown_agent": "未知 Agent: {agent}",
   "error.read_failed": "读取 {agent} 配置失败",
   "error.write_failed": "写入 {agent} 配置失败",
-  "templates.title": "已保存的工作流模板"
+  "templates.title": "已保存的工作流列表"
 }

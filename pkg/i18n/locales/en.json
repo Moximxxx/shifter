@@ -58,7 +58,7 @@
   "help.quit": "q quit",
   "help.apply": "Enter apply",
   "help.type_name": "Type name • Enter save • esc back",
-  "settings.title": "Settings",
+  "settings.title": "Shifter Settings",
   "settings.language": "Language",
   "settings.language_changed": "Language changed to: {lang}",
   "settings.restart_hint": "Restart shifter to apply changes.",
@@ -73,5 +73,5 @@
   "error.unknown_agent": "Unknown agent: {agent}",
   "error.read_failed": "Failed to read {agent} config",
   "error.write_failed": "Failed to write {agent} config",
-  "templates.title": "Saved Workflow Templates"
+  "templates.title": "Saved Workflows"
 }
