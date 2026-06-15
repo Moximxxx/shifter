@@ -722,21 +722,20 @@ func (m WizardModel) viewMenu() string {
 
 	agents := m.foundAgents()
 	if len(agents) == 0 {
-		b.WriteString(i18n.T("detect.not_configured") + "\n")
-		b.WriteString("\n" + styles.HelpBar.Render(i18n.T("help.quit")))
-		return b.String()
-	}
-
-	b.WriteString(i18n.Tf("menu.found_agents", map[string]string{"count": fmt.Sprintf("%d", len(agents))}))
-	b.WriteString("\n")
-	for _, a := range agents {
-		b.WriteString(fmt.Sprintf("  ✓ %s", a.Name))
-		for k, v := range a.Summary {
-			b.WriteString(fmt.Sprintf(" (%d %s)", v, k))
+		b.WriteString(styles.MutedText.Render("⚠ " + i18n.T("detect.not_configured")))
+		b.WriteString("\n\n")
+	} else {
+		b.WriteString(i18n.Tf("menu.found_agents", map[string]string{"count": fmt.Sprintf("%d", len(agents))}))
+		b.WriteString("\n")
+		for _, a := range agents {
+			b.WriteString(fmt.Sprintf("  ✓ %s", a.Name))
+			for k, v := range a.Summary {
+				b.WriteString(fmt.Sprintf(" (%d %s)", v, k))
+			}
+			b.WriteString("\n")
 		}
 		b.WriteString("\n")
 	}
-	b.WriteString("\n")
 	b.WriteString(i18n.T("menu.what_do") + "\n\n")
 
 	items := []string{
