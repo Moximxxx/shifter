@@ -24,6 +24,12 @@ var rootCmd = &cobra.Command{
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		if enableLog {
 			log.Init()
+			log.Info("cmd", "%s %v", cmd.CommandPath(), args)
+		}
+	},
+	PersistentPostRun: func(cmd *cobra.Command, args []string) {
+		if enableLog {
+			log.Info("cmd", "%s completed", cmd.CommandPath())
 		}
 	},
 	Long: `Supported agents: Claude Code, Codex CLI, OpenCode, Gemini CLI, Qoder, Cline, Aider.
@@ -183,8 +189,11 @@ func LaunchTUI() {
 // Execute runs the root command.
 func Execute() {
 	defer log.Close()
+	rootCmd.SilenceErrors = true
+	rootCmd.SilenceUsage = true
 	if err := rootCmd.Execute(); err != nil {
-		log.Error("cli", "error: %v", err)
+		log.Error("cli", "%v", err)
+		fmt.Fprintln(os.Stderr, "Error:", err)
 		os.Exit(1)
 	}
 }
