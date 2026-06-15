@@ -14,12 +14,18 @@ import (
 	"github.com/moximxxx/shifter/engine/detect"
 	"github.com/moximxxx/shifter/engine/port"
 	"github.com/moximxxx/shifter/pkg/env"
+	"github.com/moximxxx/shifter/pkg/log"
 	"github.com/moximxxx/shifter/tui"
 )
 
 var rootCmd = &cobra.Command{
 	Use:   "shifter",
 	Short: "One-click config porting between coding agents",
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		if enableLog {
+			log.Init()
+		}
+	},
 	Long: `Supported agents: Claude Code, Codex CLI, OpenCode, Gemini CLI, Qoder, Cline, Aider.
 
 Examples:
@@ -97,6 +103,7 @@ var (
 	portAspects   string
 	detectJSON    bool
 	projectRoot   string
+	enableLog     bool
 )
 
 func init() {
@@ -139,6 +146,7 @@ func init() {
 	detectCmd.Flags().BoolVar(&detectJSON, "json", false, "Output as JSON")
 
 	rootCmd.PersistentFlags().StringVar(&projectRoot, "project-root", ".", "Project root directory")
+	rootCmd.PersistentFlags().BoolVar(&enableLog, "log", false, "Enable debug logging to ~/.shifter/logs/")
 
 	rootCmd.AddCommand(portCmd)
 	rootCmd.AddCommand(detectCmd)
@@ -174,12 +182,16 @@ func LaunchTUI() {
 
 // Execute runs the root command.
 func Execute() {
+	defer log.Close()
 	if err := rootCmd.Execute(); err != nil {
+		log.Error("cli", "error: %v", err)
 		os.Exit(1)
 	}
 }
 
 func runPort(cmd *cobra.Command, args []string) error {
+	log.Info("port", "start — project=%s", projectRoot)
+
 	var source string
 	if len(args) > 0 {
 		source = args[0]
@@ -303,6 +315,7 @@ func runPort(cmd *cobra.Command, args []string) error {
 }
 
 func runDetect(cmd *cobra.Command, args []string) error {
+	log.Info("detect", "scanning")
 	results := detect.ScanAll()
 
 	if detectJSON {
