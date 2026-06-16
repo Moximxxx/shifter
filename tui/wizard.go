@@ -407,6 +407,9 @@ func (m *WizardModel) handleEnter() (tea.Model, tea.Cmd) {
 			m.backStack = append(m.backStack, m.screen)
 			m.screen = WizFlowHub
 			m.cursorIdx = 0
+			if !m.flowhubLoaded {
+				return m, fetchFlowHubCmd
+			}
 			return m, nil
 		case 5: // Settings
 			m.prevScreen = WizMenu

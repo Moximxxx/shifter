@@ -120,7 +120,7 @@ func (m FlowHubModel) View() string {
 		b.WriteString(styles.ActiveItem.Render(m.query + "_"))
 	} else {
 		b.WriteString(styles.MutedText.Render(m.query))
-		b.WriteString("  (" + i18n.T("help.apply") + ")")
+		b.WriteString(styles.MutedText.Render("  / " + i18n.T("flowhub.search")))
 	}
 	b.WriteString("\n\n")
 
@@ -142,7 +142,7 @@ func (m FlowHubModel) View() string {
 	}
 
 	b.WriteString("\n")
-	b.WriteString(styles.HelpBar.Render("↑↓ "+i18n.T("help.navigate")+"  / "+i18n.T("help.apply")+"  Esc/q "+i18n.T("help.quit")))
+	b.WriteString(styles.HelpBar.Render(i18n.T("help.navigate")+"  / "+i18n.T("help.apply")+"  Esc "+i18n.T("help.quit")))
 	return b.String()
 }
 
