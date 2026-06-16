@@ -6,7 +6,50 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 
 	"github.com/moximxxx/shifter/engine/detect"
+	"github.com/moximxxx/shifter/engine/flowhub"
 )
+
+// flowHub key helpers
+func sendFlowHubKey(m WizardModel, key string) WizardModel {
+	if key == "backspace" {
+		// Backspace is handled specially in main Update, not handleInputMode
+		if len(m.flowhubQuery) > 0 {
+			m.flowhubQuery = m.flowhubQuery[:len(m.flowhubQuery)-1]
+		}
+		return m
+	}
+	msg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune(key)}
+	updated, _ := m.Update(msg)
+	switch v := updated.(type) {
+	case WizardModel:
+		return v
+	case *WizardModel:
+		return *v
+	}
+	return m
+}
+
+func sendFlowHubKeyModel(m FlowHubModel, key string) FlowHubModel {
+	var msg tea.KeyMsg
+	switch key {
+	case "enter":
+		msg = tea.KeyMsg{Type: tea.KeyEnter}
+	case "esc":
+		msg = tea.KeyMsg{Type: tea.KeyEsc}
+	case "q":
+		msg = tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'q'}}
+	default:
+		msg = tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune(key)}
+	}
+	updated, _ := m.Update(msg)
+	switch v := updated.(type) {
+	case FlowHubModel:
+		return v
+	case *FlowHubModel:
+		return *v
+	}
+	return m
+}
 
 // helper: send key to model and return updated model
 func sendKey(m WizardModel, key string) WizardModel {
@@ -352,7 +395,128 @@ func TestWizard_FoundAgents(t *testing.T) {
 // firstFoundIdx helper
 // ============================================================
 
-func TestWizard_FirstFoundIdx(t *testing.T) {
+// ============================================================
+// FlowHub — menu entry triggers fetch
+// ============================================================
+func TestWizard_FlowHub_Enter_TriggersFetch(t *testing.T) {
+	m := NewWizardModel()
+	m.screen = WizMenu
+	m.cursorIdx = 4 // FlowHub
+	m.detectResults = []detect.Result{}
+
+	m = sendKey(m, "enter")
+	if m.screen != WizFlowHub {
+		t.Errorf("should enter WizFlowHub, got %v", m.screen)
+	}
+}
+
+// ============================================================
+// FlowHub — typing filters results
+// ============================================================
+func TestWizard_FlowHub_Type_Filters(t *testing.T) {
+	m := NewWizardModel()
+	m.screen = WizFlowHub
+	m.flowhubLoaded = true
+	m.flowhubResults = []flowhub.Workflow{
+		{Name: "hello-shifter", Version: "0.1.0", Description: "A demo workflow", Agent: "claude-code", Downloads: 10},
+		{Name: "security-audit", Version: "0.2.0", Description: "Security scanning", Agent: "claude-code", Downloads: 5},
+	}
+
+	// Type 'h'
+	m = sendFlowHubKey(m, "h")
+	if m.flowhubQuery != "h" {
+		t.Errorf("query should be 'h', got %q", m.flowhubQuery)
+	}
+	filtered := getFlowHubFiltered(m.flowhubResults, m.flowhubQuery)
+	if len(filtered) != 1 || filtered[0].Name != "hello-shifter" {
+		t.Errorf("should filter to hello-shifter only, got %d results", len(filtered))
+	}
+}
+
+// ============================================================
+// FlowHub — backspace
+// ============================================================
+func TestWizard_FlowHub_Backspace(t *testing.T) {
+	m := NewWizardModel()
+	m.screen = WizFlowHub
+	m.flowhubLoaded = true
+	m.flowhubQuery = "hel"
+	m.flowhubResults = []flowhub.Workflow{
+		{Name: "hello-shifter", Version: "0.1.0", Description: "demo", Agent: "claude-code"},
+	}
+
+	m = sendFlowHubKey(m, "backspace")
+	if m.flowhubQuery != "he" {
+		t.Errorf("backspace should remove last char, got %q", m.flowhubQuery)
+	}
+}
+
+// ============================================================
+// FlowHub — Enter shows install hint
+// ============================================================
+func TestWizard_FlowHub_Enter_ShowsBanner(t *testing.T) {
+	m := NewWizardModel()
+	m.screen = WizFlowHub
+	m.flowhubLoaded = true
+	m.flowhubCursor = 0
+	m.flowhubResults = []flowhub.Workflow{
+		{Name: "hello-shifter", Version: "0.1.0", Description: "demo", Agent: "claude-code"},
+	}
+	m.backStack = append(m.backStack, WizMenu)
+
+	m = sendKey(m, "enter")
+	if m.screen != WizMenu {
+		t.Errorf("Enter on workflow should return to menu, got %v", m.screen)
+	}
+	if m.resultBanner == "" {
+		t.Error("resultBanner should have install hint")
+	}
+}
+
+// ============================================================
+// FlowHub — standalone model
+// ============================================================
+func TestFlowHubModel_Init(t *testing.T) {
+	m := NewFlowHubModel()
+	if m.screen != fhList {
+		t.Errorf("init screen should be fhList(0), got %d", m.screen)
+	}
+}
+
+func TestFlowHubModel_Esc_Quits(t *testing.T) {
+	m := NewFlowHubModel()
+	m.loaded = true
+	m.results = []flowhub.Workflow{{Name: "test", Version: "1.0"}}
+	m = sendFlowHubKeyModel(m, "esc")
+	if !m.quitting {
+		t.Error("Esc should quit")
+	}
+}
+
+func TestFlowHubModel_Enter_OpensDetail(t *testing.T) {
+	m := NewFlowHubModel()
+	m.loaded = true
+	m.results = []flowhub.Workflow{{Name: "test", Version: "1.0", Description: "desc"}}
+	m = sendFlowHubKeyModel(m, "enter")
+	if m.screen != fhDetail {
+		t.Errorf("Enter should open detail, got screen=%d", m.screen)
+	}
+	if m.selected == nil || m.selected.Name != "test" {
+		t.Error("selected should be set")
+	}
+}
+
+func TestFlowHubModel_Detail_Esc_Back(t *testing.T) {
+	m := NewFlowHubModel()
+	m.screen = fhDetail
+	m.selected = &flowhub.Workflow{Name: "test"}
+	m = sendFlowHubKeyModel(m, "esc")
+	if m.screen != fhList {
+		t.Errorf("Esc from detail should return to list, got screen=%d", m.screen)
+	}
+}
+
+func TestFirstFoundIdx(t *testing.T) {
 	m := NewWizardModel()
 	m.detectResults = []detect.Result{
 		{ID: "a", Found: false},
