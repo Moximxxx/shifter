@@ -1,5 +1,5 @@
-cc211672a34e45e6ac64fa4b39b185027d45c3527fd5933d6fde1b5c79814edc  shifter_1.4.0_darwin-amd64.tar.gz
-568700f7abfaaeff78558daa1caf31a1e5efed4fa65191346ac4c55bd18d6903  shifter_1.4.0_darwin-arm64.tar.gz
-f89c016de278242b90f0d1b747d37ba59f77e48ccd5503e80f5adbb7eeba13af  shifter_1.4.0_linux-amd64.tar.gz
-aab1e39421a6644f65e7766bc68950d188cf1693354c58387496767d973d65dc  shifter_1.4.0_linux-arm64.tar.gz
-339488ddc1bf686f69a133f7800e28c019e749b5eae4f8ddd8896e9efb123316  shifter_1.4.0_windows-amd64.exe.tar.gz
+4958c5d8b3e6d2b36e67f5526679691fc0e247dd26bfb57e0b65831ae298ad0a  shifter_1.5.0_darwin-amd64.tar.gz
+03c56cec920637e7560e68115173c1f2ccec49504a29925f9d53bda8b0c27848  shifter_1.5.0_darwin-arm64.tar.gz
+29010afbf4e3031653fe06fef1ff0f2691e881cdd6c362c1c30e4be6f2edb397  shifter_1.5.0_linux-amd64.tar.gz
+720fabca30744cd015904910f268ffe566b2a3886b97f7e905b7c59f0379c4fa  shifter_1.5.0_linux-arm64.tar.gz
+2e51d62633842cc8b3bc8a69a6b94f64990a0deffb0a748f04f36f20c48b35fa  shifter_1.5.0_windows-amd64.exe.tar.gz

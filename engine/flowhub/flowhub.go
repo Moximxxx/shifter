@@ -18,6 +18,8 @@ const (
 	IndexURL = "https://raw.githubusercontent.com/Moximxxx/flowhub/main/index.json"
 	// WorkflowURL formats a raw workflow download URL.
 	WorkflowURL = "https://raw.githubusercontent.com/Moximxxx/flowhub/main/workflows/%s/workflow.shifter.json"
+	// SkillURL formats a raw SKILL.md download URL.
+	SkillURL = "https://raw.githubusercontent.com/Moximxxx/flowhub/main/workflows/%s/SKILL.md"
 )
 
 // Workflow represents a published workflow in the FlowHub registry.
@@ -27,6 +29,7 @@ type Workflow struct {
 	Author      string   `json:"author"`
 	Agent       string   `json:"agent"`
 	Tags        []string `json:"tags"`
+	Category    string   `json:"category,omitempty"`
 	Description string   `json:"description"`
 	Downloads   int      `json:"downloads"`
 	Updated     string   `json:"updated"`
@@ -131,6 +134,7 @@ type Metadata struct {
 	Author      string   `json:"author,omitempty"`
 	Agent       string   `json:"agent"`
 	Tags        []string `json:"tags,omitempty"`
+	Category    string   `json:"category,omitempty"`
 	Description string   `json:"description,omitempty"`
 }
 
