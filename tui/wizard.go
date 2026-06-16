@@ -191,11 +191,18 @@ func (m WizardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if m.inputMode {
 			return m.handleInputMode(msg)
 		}
-		// FlowHub: typing starts search mode
+		// FlowHub: backspace removes last char
+		if m.screen == WizFlowHub && msg.String() == "backspace" {
+			if len(m.flowhubQuery) > 0 {
+				m.flowhubQuery = m.flowhubQuery[:len(m.flowhubQuery)-1]
+				m.flowhubCursor = 0
+			}
+			return m, nil
+		}
+		// FlowHub: typing directly filters — update query and reset cursor
 		if m.screen == WizFlowHub && len(msg.String()) == 1 && msg.String() != " " {
-			m.inputMode = true
-			m.inputText = ""
-			m.flowhubQuery = msg.String()
+			m.flowhubQuery += msg.String()
+			m.flowhubCursor = 0
 			return m, nil
 		}
 
@@ -301,10 +308,22 @@ func (m *WizardModel) handleInputMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.inputText = ""
 		return m, nil
 	case "backspace":
+		if m.screen == WizFlowHub {
+			if len(m.flowhubQuery) > 0 {
+				m.flowhubQuery = m.flowhubQuery[:len(m.flowhubQuery)-1]
+			}
+			return m, nil
+		}
 		if len(m.inputText) > 0 {
 			m.inputText = m.inputText[:len(m.inputText)-1]
 		}
 	default:
+		if m.screen == WizFlowHub {
+			if len(msg.String()) == 1 {
+				m.flowhubQuery += msg.String()
+			}
+			return m, nil
+		}
 		if len(msg.String()) == 1 {
 			m.inputText += msg.String()
 		}
@@ -1049,7 +1068,7 @@ func (m WizardModel) viewFlowHub() string {
 	}
 
 	b.WriteString("\n")
-	b.WriteString(styles.HelpBar.Render("Type to search • Enter install • Esc "+i18n.T("help.back")))
+	b.WriteString(styles.HelpBar.Render(i18n.T("flowhub.help")))
 	return b.String()
 }
 
