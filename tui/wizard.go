@@ -457,6 +457,16 @@ func (m *WizardModel) handleEnter() (tea.Model, tea.Cmd) {
 		m.screen = WizTemplates
 		return m, nil
 
+	case WizFlowHub:
+		filtered := getFlowHubFiltered(m.flowhubResults, m.flowhubQuery)
+		if m.flowhubCursor < len(filtered) {
+			w := filtered[m.flowhubCursor]
+			m.resultBanner = fmt.Sprintf("To install: shifter flow install %s --to <agent>", w.Name)
+			m.screen = WizMenu
+			m.cursorIdx = 0
+		}
+		return m, nil
+
 	case WizSaveSelectAgent:
 		if f := m.foundAgents(); m.cursorIdx < len(f) {
 			m.selectedAgentID = f[m.cursorIdx].ID
