@@ -81,5 +81,16 @@
   "flowhub.search": "搜索",
   "flowhub.no_results": "没有匹配的工作流。",
   "flowhub.help": "输入搜索 • Enter 切换 • Esc 返回",
-  "flowhub.install_hint": "安装: shifter flow install"
+  "flowhub.install_hint": "安装: shifter flow install",
+  "detail.source": "来源",
+  "detail.updated": "更新",
+  "detail.agents": "子代理",
+  "detail.skills": "技能",
+  "detail.commands": "命令",
+  "detail.mcp": "MCP 服务器",
+  "detail.hooks": "钩子",
+  "detail.permissions": "权限",
+  "detail.allow": "允许",
+  "detail.deny": "拒绝",
+  "detail.publish_hint": "Ctrl+P 发布到 FlowHub"
 }

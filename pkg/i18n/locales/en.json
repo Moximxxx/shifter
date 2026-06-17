@@ -81,5 +81,16 @@
   "flowhub.search": "Search",
   "flowhub.no_results": "No workflows match your search.",
   "flowhub.help": "Type to search • Enter to toggle • Esc back",
-  "flowhub.install_hint": "To install: shifter flow install"
+  "flowhub.install_hint": "To install: shifter flow install",
+  "detail.source": "Source",
+  "detail.updated": "Updated",
+  "detail.agents": "Agents",
+  "detail.skills": "Skills",
+  "detail.commands": "Commands",
+  "detail.mcp": "MCP Servers",
+  "detail.hooks": "Hooks",
+  "detail.permissions": "Permissions",
+  "detail.allow": "allow",
+  "detail.deny": "deny",
+  "detail.publish_hint": "Ctrl+P publish to FlowHub"
 }

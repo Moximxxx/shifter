@@ -1059,31 +1059,35 @@ func (m WizardModel) viewTemplateDetail() string {
 		b.WriteString(p.Description)
 		b.WriteString("\n\n")
 	}
-	b.WriteString(styles.MutedText.Render(fmt.Sprintf("Source: %s  |  Updated: %s", p.SourceAgent, p.UpdatedAt.Format("2006-01-02 15:04"))))
+	b.WriteString(styles.MutedText.Render(fmt.Sprintf("%s: %s  |  %s: %s",
+		i18n.T("detail.source"), p.SourceAgent,
+		i18n.T("detail.updated"), p.UpdatedAt.Format("2006-01-02 15:04"))))
 	b.WriteString("\n\n")
 
 	cfg := p.Config
-	b.WriteString(fmt.Sprintf("  Agents:      %d\n", len(cfg.Agents)))
+	b.WriteString(fmt.Sprintf("  %s: %d\n", i18n.T("detail.agents"), len(cfg.Agents)))
 	for _, a := range cfg.Agents {
 		b.WriteString(fmt.Sprintf("    • %s — %s\n", a.Name, a.Description))
 	}
-	b.WriteString(fmt.Sprintf("  Skills:      %d\n", len(cfg.Skills)))
+	b.WriteString(fmt.Sprintf("  %s: %d\n", i18n.T("detail.skills"), len(cfg.Skills)))
 	for _, s := range cfg.Skills {
 		b.WriteString(fmt.Sprintf("    • %s\n", s.Name))
 	}
-	b.WriteString(fmt.Sprintf("  Commands:    %d\n", len(cfg.Commands)))
-	b.WriteString(fmt.Sprintf("  MCP Servers: %d\n", len(cfg.MCPServers)))
+	b.WriteString(fmt.Sprintf("  %s: %d\n", i18n.T("detail.commands"), len(cfg.Commands)))
+	b.WriteString(fmt.Sprintf("  %s: %d\n", i18n.T("detail.mcp"), len(cfg.MCPServers)))
 	for _, m := range cfg.MCPServers {
 		b.WriteString(fmt.Sprintf("    • %s (%s)\n", m.Name, m.Type))
 	}
-	b.WriteString(fmt.Sprintf("  Hooks:       %d\n", len(cfg.Hooks)))
+	b.WriteString(fmt.Sprintf("  %s: %d\n", i18n.T("detail.hooks"), len(cfg.Hooks)))
 	if cfg.Permissions != nil {
-		b.WriteString(fmt.Sprintf("  Permissions: %d allow, %d deny\n",
-			len(cfg.Permissions.AllowRules), len(cfg.Permissions.DenyRules)))
+		b.WriteString(fmt.Sprintf("  %s: %d %s, %d %s\n",
+			i18n.T("detail.permissions"),
+			len(cfg.Permissions.AllowRules), i18n.T("detail.allow"),
+			len(cfg.Permissions.DenyRules), i18n.T("detail.deny")))
 	}
 
 	b.WriteString("\n")
-	b.WriteString(styles.HelpBar.Render("Ctrl+P publish to FlowHub  •  "+i18n.T("help.back")))
+	b.WriteString(styles.HelpBar.Render(i18n.T("detail.publish_hint")+"  •  "+i18n.T("help.back")))
 	return b.String()
 }
 
