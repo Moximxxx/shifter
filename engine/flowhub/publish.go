@@ -40,7 +40,7 @@ func Publish(req PublishRequest) (string, error) {
 	branchName := fmt.Sprintf("workflow/%s", req.Name)
 	if err := createBranch(req.Token, branchName, sha); err != nil {
 		// Branch may already exist — try with timestamp suffix
-		branchName = fmt.Sprintf("workflow/%s-%d", req.Name, sha[:6])
+		branchName = fmt.Sprintf("workflow/%s-%s", req.Name, sha[:6])
 		if err := createBranch(req.Token, branchName, sha); err != nil {
 			return "", fmt.Errorf("create branch: %w", err)
 		}
