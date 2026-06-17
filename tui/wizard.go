@@ -1168,6 +1168,9 @@ func (m WizardModel) viewFlowHub() string {
 }
 
 b.WriteString(styles.HelpBar.Render(i18n.T("flowhub.help")))
+	return b.String()
+}
+
 func (m WizardModel) viewSettings() string {
 	var b strings.Builder
 	b.WriteString(styles.Title.Render("⚙ " + i18n.T("settings.title")))
