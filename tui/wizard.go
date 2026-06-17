@@ -2,7 +2,9 @@ package tui
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -269,6 +271,11 @@ func (m WizardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, nil
 			}
 			return m.handleEnter()
+		case "ctrl+p":
+			if m.screen == WizTemplateDetail && m.selectedProfile != nil && m.selectedProfile.Config != nil {
+				return m, publishToFlowHubCmd(m.selectedProfile)
+			}
+			return m, nil
 		case " ":
 			if m.screen == WizPortAspects && m.cursorIdx < len(m.aspects) {
 				m.aspects[m.cursorIdx].Selected = !m.aspects[m.cursorIdx].Selected
@@ -662,6 +669,39 @@ func fetchFlowHubCmd() tea.Msg {
 	return flowhubResultsMsg{results: results}
 }
 
+func publishToFlowHubCmd(p *profile.Profile) tea.Cmd {
+	return func() tea.Msg {
+		if p == nil || p.Config == nil {
+			return fmt.Errorf("no config to publish")
+		}
+		workflowJSON, err := json.MarshalIndent(p.Config, "", "  ")
+		if err != nil {
+			return err
+		}
+		meta := flowhub.GenerateMetadata(p.Name, p.SourceAgent, p.Description, nil)
+		metaJSON, _ := json.MarshalIndent(meta, "", "  ")
+
+		files := map[string][]byte{
+			"workflow.shifter.json": workflowJSON,
+			"metadata.json":         metaJSON,
+		}
+		token := os.Getenv("GITHUB_TOKEN")
+		if token == "" {
+			return fmt.Errorf("GITHUB_TOKEN not set")
+		}
+		prURL, err := flowhub.Publish(flowhub.PublishRequest{
+			Name:    p.Name,
+			Files:   files,
+			Message: fmt.Sprintf("Publish %s from shifter ui", p.Name),
+			Token:   token,
+		})
+		if err != nil {
+			return fmt.Errorf("publish: %w", err)
+		}
+		return fmt.Sprintf("✓ Published to FlowHub!\n  PR: %s", prURL)
+	}
+}
+
 func loadProfilesCmd() tea.Msg {
 	profiles, _ := profile.List()
 	return profileListMsg{profiles: profiles}
@@ -1024,7 +1064,7 @@ func (m WizardModel) viewTemplateDetail() string {
 	}
 
 	b.WriteString("\n")
-	b.WriteString(styles.HelpBar.Render(i18n.T("help.back")))
+	b.WriteString(styles.HelpBar.Render("Ctrl+P publish to FlowHub  •  "+i18n.T("help.back")))
 	return b.String()
 }
 
