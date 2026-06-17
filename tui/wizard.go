@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"sort"
 	"strings"
 	"time"
 
@@ -889,7 +890,9 @@ func (m WizardModel) viewMenu() string {
 		for _, a := range agents {
 			b.WriteString(styles.ActiveItem.Render(fmt.Sprintf("  %s", a.Name)))
 			b.WriteString("\n")
-			for k, v := range a.Summary {
+			sorted := sortedKeys(a.Summary)
+			for _, k := range sorted {
+				v := a.Summary[k]
 				label := i18n.T("stat." + k)
 				if label == "stat."+k {
 					label = k // fallback
@@ -1226,4 +1229,13 @@ func getFiltered(m WizardModel) []flowhub.Workflow {
 		}
 	}
 	return filtered
+}
+
+func sortedKeys(m map[string]int) []string {
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	return keys
 }
