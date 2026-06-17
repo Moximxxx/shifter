@@ -60,12 +60,14 @@ var (
 	flowSource      string
 	flowDesc        string
 	flowInstallTo   string
+	flowSubmit      bool
 )
 
 func init() {
 	flowPublishCmd.Flags().StringVar(&flowTags, "tags", "", "Comma-separated tags")
 	flowPublishCmd.Flags().StringVar(&flowSource, "source", "", "Source agent (auto-detect if omitted)")
 	flowPublishCmd.Flags().StringVar(&flowDesc, "desc", "", "Description")
+	flowPublishCmd.Flags().BoolVar(&flowSubmit, "submit", false, "Auto-submit PR via GitHub API (needs GITHUB_TOKEN)")
 	flowInstallCmd.Flags().StringVar(&flowInstallTo, "to", "", "Target agent to apply the workflow to")
 
 	flowCmd.AddCommand(flowSearchCmd, flowInstallCmd, flowPublishCmd, flowListCmd, flowTrendingCmd)
@@ -252,17 +254,41 @@ shifter flow install %s
 	fmt.Printf("  ✓ metadata.json (%d bytes)\n", len(metaJSON))
 	fmt.Printf("  ✓ README.md (%d bytes)\n", len(readme))
 
+	// Auto-submit via GitHub API if --submit flag is set
+	if flowSubmit {
+		fmt.Printf("\n🚀 Auto-submitting via GitHub API...\n")
+		files := map[string][]byte{
+			"workflow.shifter.json": workflowJSON,
+			"metadata.json":         metaJSON,
+			"README.md":             []byte(readme),
+		}
+		prURL, err := flowhub.Publish(flowhub.PublishRequest{
+			Name:    name,
+			Files:   files,
+			Message: fmt.Sprintf("Add workflow: %s\n\n%s", name, flowDesc),
+		})
+		if err != nil {
+			fmt.Printf("⚠ Auto-submit failed: %v\n", err)
+			fmt.Println("\nFalling back to manual publish:")
+		} else {
+			fmt.Printf("✓ PR created: %s\n\n", prURL)
+			fmt.Printf("After merge, install with: shifter flow install %s\n", name)
+			return nil
+		}
+	}
+
 	fmt.Printf("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
-	fmt.Printf("🚀 Quick Publish (recommended):\n\n")
-	fmt.Printf("  1. Fork the repo:  %s/fork\n", flowhub.RepoURL)
-	fmt.Printf("  2. Upload files:   %s\n", prURL)
-	fmt.Printf("     (drag or upload each file above to this folder)\n")
-	fmt.Printf("  3. Create PR:      %s/compare\n", flowhub.RepoURL)
+	fmt.Printf("🚀 Quick Publish:\n\n")
+	fmt.Printf("  Set GITHUB_TOKEN and use --submit to auto-publish:\n")
+	fmt.Printf("  export GITHUB_TOKEN=ghp_xxxx\n")
+	fmt.Printf("  shifter flow publish %s --submit\n\n", name)
+	fmt.Printf("  Or manually:\n")
+	fmt.Printf("  1. Fork:  %s/fork\n", flowhub.RepoURL)
+	fmt.Printf("  2. Upload: %s\n", prURL)
+	fmt.Printf("  3. Create PR: %s/compare\n", flowhub.RepoURL)
 	fmt.Printf("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
-	fmt.Printf("\n💡 After merge, your workflow appears in:\n")
-	fmt.Printf("   shifter flow search %s\n", name)
+	fmt.Printf("\n💡 After merge, install with:\n")
 	fmt.Printf("   shifter flow install %s\n", name)
-	fmt.Printf("   %s\n", flowhub.RepoURL)
 
 	return nil
 }
