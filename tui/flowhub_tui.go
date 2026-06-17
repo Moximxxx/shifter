@@ -202,25 +202,27 @@ func (m FlowHubModel) View() string {
 		b.WriteString(styles.MutedText.Render(i18n.T("flowhub.no_results")))
 	} else {
 		for i, w := range filtered {
-			line := fmt.Sprintf("%s v%s  ⭐%d", w.Name, w.Version, w.Downloads)
+			line := fmt.Sprintf("%s v%s", w.Name, w.Version)
 			if i == m.cursor {
 				b.WriteString(styles.ActiveItem.Render("❯ " + line))
 			} else {
 				b.WriteString(styles.InactiveItem.Render("  " + line))
 			}
 			b.WriteString("\n")
-			// Card-style: description + agent + tags below
-			var parts []string
-			if w.Description != "" {
-				parts = append(parts, w.Description)
-			}
+			b.WriteString(styles.MutedText.Render(fmt.Sprintf("    - %s: ⭐%d", i18n.T("detail.source"), w.Downloads)))
+			b.WriteString("\n")
 			if w.Agent != "" {
-				parts = append(parts, fmt.Sprintf("%s: %s", i18n.T("detail.source"), w.Agent))
+				b.WriteString(styles.MutedText.Render(fmt.Sprintf("    - Agent: %s", w.Agent)))
+				b.WriteString("\n")
+			}
+			if w.Description != "" {
+				b.WriteString(styles.MutedText.Render(fmt.Sprintf("    - %s", w.Description)))
+				b.WriteString("\n")
 			}
 			if len(w.Tags) > 0 {
-				parts = append(parts, strings.Join(w.Tags, ", "))
+				b.WriteString(styles.MutedText.Render(fmt.Sprintf("    - %s", strings.Join(w.Tags, ", "))))
+				b.WriteString("\n")
 			}
-			b.WriteString(styles.MutedText.Render(fmt.Sprintf("      %s", strings.Join(parts, "  |  "))))
 			b.WriteString("\n")
 		}
 	}

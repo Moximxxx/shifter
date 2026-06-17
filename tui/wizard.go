@@ -1008,23 +1008,22 @@ func (m WizardModel) viewProfileSelect() string {
 
 	for i, p := range m.profileList {
 		line := fmt.Sprintf("%s", p.Name)
-		if p.Description != "" {
-			line += fmt.Sprintf(" — %s", p.Description)
-		}
 		if i == m.cursorIdx {
 			b.WriteString(styles.ActiveItem.Render("❯ " + line))
 		} else {
 			b.WriteString(styles.InactiveItem.Render("  " + line))
 		}
 		b.WriteString("\n")
-		// Card-style below name
-		var parts []string
 		if p.SourceAgent != "" {
-			parts = append(parts, fmt.Sprintf("%s: %s", i18n.T("detail.source"), p.SourceAgent))
+			b.WriteString(styles.MutedText.Render(fmt.Sprintf("    - %s: %s", i18n.T("detail.source"), p.SourceAgent)))
+			b.WriteString("\n")
 		}
-		parts = append(parts, p.Summary())
-		b.WriteString(styles.MutedText.Render(fmt.Sprintf("      %s", strings.Join(parts, "  |  "))))
-		b.WriteString("\n")
+		if p.Description != "" {
+			b.WriteString(styles.MutedText.Render(fmt.Sprintf("    - %s", p.Description)))
+			b.WriteString("\n")
+		}
+		b.WriteString(styles.MutedText.Render(fmt.Sprintf("    %s", p.Summary())))
+		b.WriteString("\n\n")
 	}
 
 	b.WriteString("\n")
@@ -1046,26 +1045,24 @@ func (m WizardModel) viewTemplates() string {
 
 	for i, p := range m.profileList {
 		line := fmt.Sprintf("%s", p.Name)
-		if p.Description != "" {
-			line += fmt.Sprintf(" — %s", p.Description)
-		}
 		if i == m.cursorIdx {
 			b.WriteString(styles.ActiveItem.Render("❯ " + line))
 		} else {
 			b.WriteString(styles.InactiveItem.Render("  " + line))
 		}
 		b.WriteString("\n")
-		// Card-style: stats below name
-		var parts []string
 		if p.SourceAgent != "" {
-			parts = append(parts, fmt.Sprintf("%s: %s", i18n.T("detail.source"), p.SourceAgent))
+			b.WriteString(styles.MutedText.Render(fmt.Sprintf("    - %s: %s", i18n.T("detail.source"), p.SourceAgent)))
+			b.WriteString("\n")
 		}
-		parts = append(parts, p.Summary())
-		b.WriteString(styles.MutedText.Render(fmt.Sprintf("      %s", strings.Join(parts, "  |  "))))
-		b.WriteString("\n")
+		if p.Description != "" {
+			b.WriteString(styles.MutedText.Render(fmt.Sprintf("    - %s", p.Description)))
+			b.WriteString("\n")
+		}
+		b.WriteString(styles.MutedText.Render(fmt.Sprintf("    %s", p.Summary())))
+		b.WriteString("\n\n")
 	}
 
-	b.WriteString("\n")
 	b.WriteString(styles.HelpBar.Render(i18n.T("help.navigate")+" • "+i18n.T("help.select")+" • "+i18n.T("help.back")))
 	return b.String()
 }
@@ -1145,26 +1142,32 @@ func (m WizardModel) viewFlowHub() string {
 		b.WriteString("\n")
 	} else {
 		for i, w := range filtered {
-			line := fmt.Sprintf("%s v%s  ⭐%d", w.Name, w.Version, w.Downloads)
-			if i == m.flowhubCursor {
-				b.WriteString(styles.ActiveItem.Render("❯ " + line))
-			} else {
-				b.WriteString(styles.InactiveItem.Render("  " + line))
-			}
-			b.WriteString("\n")
-			b.WriteString(styles.MutedText.Render(fmt.Sprintf("      %s  |  %s", w.Description, w.Agent)))
-			if len(w.Tags) > 0 {
-				b.WriteString(styles.MutedText.Render(fmt.Sprintf("  |  %s", strings.Join(w.Tags, ", "))))
-			}
+		line := fmt.Sprintf("%s v%s", w.Name, w.Version)
+		if i == m.flowhubCursor {
+			b.WriteString(styles.ActiveItem.Render("❯ " + line))
+		} else {
+			b.WriteString(styles.InactiveItem.Render("  " + line))
+		}
+		b.WriteString("\n")
+		b.WriteString(styles.MutedText.Render(fmt.Sprintf("    - %s: ⭐%d", i18n.T("detail.source"), w.Downloads)))
+		b.WriteString("\n")
+		if w.Agent != "" {
+			b.WriteString(styles.MutedText.Render(fmt.Sprintf("    - Agent: %s", w.Agent)))
 			b.WriteString("\n")
 		}
+		if w.Description != "" {
+			b.WriteString(styles.MutedText.Render(fmt.Sprintf("    - %s", w.Description)))
+			b.WriteString("\n")
+		}
+		if len(w.Tags) > 0 {
+			b.WriteString(styles.MutedText.Render(fmt.Sprintf("    - %s", strings.Join(w.Tags, ", "))))
+			b.WriteString("\n")
+		}
+		b.WriteString("\n")
 	}
-
-	b.WriteString("\n")
-	b.WriteString(styles.HelpBar.Render(i18n.T("flowhub.help")))
-	return b.String()
 }
 
+b.WriteString(styles.HelpBar.Render(i18n.T("flowhub.help")))
 func (m WizardModel) viewSettings() string {
 	var b strings.Builder
 	b.WriteString(styles.Title.Render("⚙ " + i18n.T("settings.title")))
