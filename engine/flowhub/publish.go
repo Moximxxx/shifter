@@ -36,19 +36,25 @@ func Publish(req PublishRequest) (string, error) {
 		return "", fmt.Errorf("get branch: %w", err)
 	}
 
-	// 2. Create new branch
-	branchName := fmt.Sprintf("workflow/%s", req.Name)
+	// 2. Sanitize name for branch (no spaces or special chars)
+	safeName := strings.Map(func(r rune) rune {
+		if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') || r == '-' || r == '_' {
+			return r
+		}
+		return '-'
+	}, req.Name)
+	branchName := fmt.Sprintf("workflow/%s", safeName)
 	if err := createBranch(req.Token, branchName, sha); err != nil {
 		// Branch may already exist — try with timestamp suffix
-		branchName = fmt.Sprintf("workflow/%s-%s", req.Name, sha[:6])
+		branchName = fmt.Sprintf("workflow/%s-%s", safeName, sha[:6])
 		if err := createBranch(req.Token, branchName, sha); err != nil {
 			return "", fmt.Errorf("create branch: %w", err)
 		}
 	}
 
-	// 3. Commit files
+	// 3. Commit files (sanitize folder name)
 	for path, content := range req.Files {
-		fullPath := fmt.Sprintf("workflows/%s/%s", req.Name, path)
+		fullPath := fmt.Sprintf("workflows/%s/%s", safeName, path)
 		if err := createOrUpdateFile(req.Token, fullPath, content, req.Message, branchName); err != nil {
 			return "", fmt.Errorf("upload %s: %w", path, err)
 		}
