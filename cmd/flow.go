@@ -243,16 +243,26 @@ shifter flow install %s
 	os.WriteFile(workflowDir+"/metadata.json", metaJSON, 0644)
 	os.WriteFile(workflowDir+"/README.md", []byte(readme), 0644)
 
+	// Generate one-click PR URL (GitHub new-file form)
+	prURL := fmt.Sprintf("%s/new/main/workflows/%s", flowhub.RepoURL, name)
+
 	fmt.Printf("✓ Workflow %q ready to publish\n\n", name)
-	fmt.Printf("Files prepared in %s/:\n", workflowDir)
-	fmt.Printf("  ✓ workflow.shifter.json\n")
-	fmt.Printf("  ✓ metadata.json\n")
-	fmt.Printf("  ✓ README.md\n\n")
-	fmt.Printf("To publish:\n")
-	fmt.Printf("  1. Fork %s\n", flowhub.RepoURL)
-	fmt.Printf("  2. Add %s/ to workflows/\n", name)
-	fmt.Printf("  3. Create a Pull Request\n")
-	fmt.Printf("\nOr publish via: %s/pulls\n", flowhub.RepoURL)
+	fmt.Printf("📁 Files prepared in %s/:\n", workflowDir)
+	fmt.Printf("  ✓ workflow.shifter.json (%d bytes)\n", len(workflowJSON))
+	fmt.Printf("  ✓ metadata.json (%d bytes)\n", len(metaJSON))
+	fmt.Printf("  ✓ README.md (%d bytes)\n", len(readme))
+
+	fmt.Printf("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
+	fmt.Printf("🚀 Quick Publish (recommended):\n\n")
+	fmt.Printf("  1. Fork the repo:  %s/fork\n", flowhub.RepoURL)
+	fmt.Printf("  2. Upload files:   %s\n", prURL)
+	fmt.Printf("     (drag or upload each file above to this folder)\n")
+	fmt.Printf("  3. Create PR:      %s/compare\n", flowhub.RepoURL)
+	fmt.Printf("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
+	fmt.Printf("\n💡 After merge, your workflow appears in:\n")
+	fmt.Printf("   shifter flow search %s\n", name)
+	fmt.Printf("   shifter flow install %s\n", name)
+	fmt.Printf("   %s\n", flowhub.RepoURL)
 
 	return nil
 }
