@@ -885,15 +885,20 @@ func (m WizardModel) viewMenu() string {
 		b.WriteString("\n\n")
 	} else {
 		b.WriteString(i18n.Tf("menu.found_agents", map[string]string{"count": fmt.Sprintf("%d", len(agents))}))
-		b.WriteString("\n")
+		b.WriteString("\n\n")
 		for _, a := range agents {
-			b.WriteString(fmt.Sprintf("  ✓ %s", a.Name))
+			b.WriteString(styles.ActiveItem.Render(fmt.Sprintf("  %s", a.Name)))
+			b.WriteString("\n")
 			for k, v := range a.Summary {
-				b.WriteString(fmt.Sprintf(" (%d %s)", v, k))
+				label := i18n.T("stat." + k)
+				if label == "stat."+k {
+					label = k // fallback
+				}
+				b.WriteString(styles.MutedText.Render(fmt.Sprintf("    - %s: %d", label, v)))
+				b.WriteString("\n")
 			}
 			b.WriteString("\n")
 		}
-		b.WriteString("\n")
 	}
 	b.WriteString(i18n.T("menu.what_do") + "\n\n")
 
@@ -929,9 +934,17 @@ func (m WizardModel) viewAgentSelect(title, subtitle string) string {
 
 	agents := m.foundAgents()
 	for i, a := range agents {
-		line := fmt.Sprintf("  %s", a.Name)
+		line := fmt.Sprintf("%s", a.Name)
+		details := []string{}
 		for k, v := range a.Summary {
-			line += fmt.Sprintf(" (%d %s)", v, k)
+			label := i18n.T("stat." + k)
+			if label == "stat."+k {
+				label = k
+			}
+			details = append(details, fmt.Sprintf("%d %s", v, label))
+		}
+		if len(details) > 0 {
+			line += " (" + strings.Join(details, ", ") + ")"
 		}
 		if i == m.cursorIdx {
 			b.WriteString(styles.ActiveItem.Render("❯ " + line))

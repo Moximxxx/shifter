@@ -92,5 +92,17 @@
   "detail.permissions": "Permissions",
   "detail.allow": "allow",
   "detail.deny": "deny",
-  "detail.publish_hint": "Ctrl+P publish to FlowHub"
+  "detail.publish_hint": "Ctrl+P publish to FlowHub",
+  "stat.agents": "agents",
+  "stat.skills": "skills",
+  "stat.commands": "commands",
+  "stat.rules": "rules",
+  "stat.plugins": "plugins",
+  "stat.hooks": "hooks",
+  "stat.constraints": "constraints",
+  "stat.mcp_servers": "mcp_servers",
+  "stat.settings_file": "settings",
+  "stat.config_file": "config",
+  "stat.rules_files": "rules",
+  "stat.rules_file": "rules"
 }

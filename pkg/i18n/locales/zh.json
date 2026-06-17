@@ -92,5 +92,17 @@
   "detail.permissions": "权限",
   "detail.allow": "允许",
   "detail.deny": "拒绝",
-  "detail.publish_hint": "Ctrl+P 发布到 FlowHub"
+  "detail.publish_hint": "Ctrl+P 发布到 FlowHub",
+  "stat.agents": "子代理",
+  "stat.skills": "技能",
+  "stat.commands": "命令",
+  "stat.rules": "规则",
+  "stat.plugins": "插件",
+  "stat.hooks": "钩子",
+  "stat.constraints": "约束",
+  "stat.mcp_servers": "MCP 服务器",
+  "stat.settings_file": "设置",
+  "stat.config_file": "配置",
+  "stat.rules_files": "规则",
+  "stat.rules_file": "规则"
 }
