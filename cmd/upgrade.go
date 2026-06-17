@@ -118,11 +118,42 @@ func runUpgrade(cmd *cobra.Command, args []string) error {
 
 // fetchLatestVersion gets the latest release tag from GitHub API.
 func fetchLatestVersion() (string, error) {
-	resp, err := http.Get("https://api.github.com/repos/Moximxxx/shifter/releases/latest")
+	url := "https://api.github.com/repos/Moximxxx/shifter/releases/latest"
+	req, _ := http.NewRequest("GET", url, nil)
+	req.Header.Set("Accept", "application/vnd.github.v3+json")
+
+	// Use token for authenticated request (higher rate limit)
+	if token := os.Getenv("GITHUB_TOKEN"); token != "" {
+		req.Header.Set("Authorization", "Bearer "+token)
+	} else if token := os.Getenv("GH_TOKEN"); token != "" {
+		req.Header.Set("Authorization", "Bearer "+token)
+	} else {
+		// Try gh CLI token
+		home, _ := os.UserHomeDir()
+		data, _ := os.ReadFile(home + "/.config/gh/hosts.yml")
+		if data != nil {
+			for _, line := range strings.Split(string(data), "\n") {
+				if strings.Contains(line, "oauth_token:") || strings.Contains(line, "token:") {
+					parts := strings.SplitN(line, ":", 2)
+					if len(parts) == 2 {
+						token := strings.TrimSpace(parts[1])
+						req.Header.Set("Authorization", "Bearer "+token)
+						break
+					}
+				}
+			}
+		}
+	}
+
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return "", err
 	}
 	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("API returned %d (rate limited? set GITHUB_TOKEN)", resp.StatusCode)
+	}
 
 	var release struct {
 		TagName string `json:"tag_name"`
@@ -131,7 +162,7 @@ func fetchLatestVersion() (string, error) {
 		return "", err
 	}
 	if release.TagName == "" {
-		return "", fmt.Errorf("no latest release found")
+		return "", fmt.Errorf("no release found")
 	}
 	return release.TagName, nil
 }
