@@ -687,7 +687,26 @@ func publishToFlowHubCmd(p *profile.Profile) tea.Cmd {
 		}
 		token := os.Getenv("GITHUB_TOKEN")
 		if token == "" {
-			return fmt.Errorf("GITHUB_TOKEN not set")
+			token = os.Getenv("GH_TOKEN")
+		}
+		if token == "" {
+			// Try gh CLI config
+			home, _ := os.UserHomeDir()
+			data, _ := os.ReadFile(home + "/.config/gh/hosts.yml")
+			if data != nil {
+				for _, line := range strings.Split(string(data), "\n") {
+					if strings.Contains(line, "oauth_token:") || strings.Contains(line, "token:") {
+						parts := strings.SplitN(line, ":", 2)
+						if len(parts) == 2 {
+							token = strings.TrimSpace(parts[1])
+							break
+						}
+					}
+				}
+			}
+		}
+		if token == "" {
+			return fmt.Errorf("GITHUB_TOKEN not set. Create one at https://github.com/settings/tokens\n\nThen: export GITHUB_TOKEN=ghp_xxxx")
 		}
 		prURL, err := flowhub.Publish(flowhub.PublishRequest{
 			Name:    p.Name,
