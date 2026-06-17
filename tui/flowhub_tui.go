@@ -208,7 +208,19 @@ func (m FlowHubModel) View() string {
 			} else {
 				b.WriteString(styles.InactiveItem.Render("  " + line))
 			}
-			b.WriteString("\n      " + styles.MutedText.Render(w.Description))
+			b.WriteString("\n")
+			// Card-style: description + agent + tags below
+			var parts []string
+			if w.Description != "" {
+				parts = append(parts, w.Description)
+			}
+			if w.Agent != "" {
+				parts = append(parts, fmt.Sprintf("%s: %s", i18n.T("detail.source"), w.Agent))
+			}
+			if len(w.Tags) > 0 {
+				parts = append(parts, strings.Join(w.Tags, ", "))
+			}
+			b.WriteString(styles.MutedText.Render(fmt.Sprintf("      %s", strings.Join(parts, "  |  "))))
 			b.WriteString("\n")
 		}
 	}

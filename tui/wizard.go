@@ -999,7 +999,7 @@ func (m WizardModel) viewProfileSelect() string {
 
 	if len(m.profileList) == 0 {
 		b.WriteString(i18n.T("load.no_profiles")+"\n\n")
-		b.WriteString("Use '💾 Save' from the main menu to create one.\n")
+		b.WriteString(i18n.T("load.no_profiles_hint") + "\n")
 		b.WriteString("\n" + styles.HelpBar.Render(i18n.T("help.back")))
 		return b.String()
 	}
@@ -1008,19 +1008,22 @@ func (m WizardModel) viewProfileSelect() string {
 
 	for i, p := range m.profileList {
 		line := fmt.Sprintf("%s", p.Name)
-		if p.SourceAgent != "" {
-			line += fmt.Sprintf("  (from %s)", p.SourceAgent)
-		}
-		line += "\n    " + styles.MutedText.Render(p.Summary())
 		if p.Description != "" {
-			line += "  " + styles.MutedText.Render(p.Description)
+			line += fmt.Sprintf(" — %s", p.Description)
 		}
-
 		if i == m.cursorIdx {
 			b.WriteString(styles.ActiveItem.Render("❯ " + line))
 		} else {
 			b.WriteString(styles.InactiveItem.Render("  " + line))
 		}
+		b.WriteString("\n")
+		// Card-style below name
+		var parts []string
+		if p.SourceAgent != "" {
+			parts = append(parts, fmt.Sprintf("%s: %s", i18n.T("detail.source"), p.SourceAgent))
+		}
+		parts = append(parts, p.Summary())
+		b.WriteString(styles.MutedText.Render(fmt.Sprintf("      %s", strings.Join(parts, "  |  "))))
 		b.WriteString("\n")
 	}
 
@@ -1052,7 +1055,13 @@ func (m WizardModel) viewTemplates() string {
 			b.WriteString(styles.InactiveItem.Render("  " + line))
 		}
 		b.WriteString("\n")
-		b.WriteString(styles.MutedText.Render(fmt.Sprintf("      %s", p.Summary())))
+		// Card-style: stats below name
+		var parts []string
+		if p.SourceAgent != "" {
+			parts = append(parts, fmt.Sprintf("%s: %s", i18n.T("detail.source"), p.SourceAgent))
+		}
+		parts = append(parts, p.Summary())
+		b.WriteString(styles.MutedText.Render(fmt.Sprintf("      %s", strings.Join(parts, "  |  "))))
 		b.WriteString("\n")
 	}
 
@@ -1113,20 +1122,15 @@ func (m WizardModel) viewFlowHub() string {
 	b.WriteString("\n\n")
 
 	if !m.flowhubLoaded {
-		b.WriteString("Loading workflows from FlowHub...\n")
+		b.WriteString(i18n.T("flowhub.loading") + "\n")
 		b.WriteString("\n" + styles.HelpBar.Render(i18n.T("help.back")))
 		return b.String()
 	}
 
-	// Search box
 	b.WriteString("🔍 " + i18n.T("flowhub.search") + ": ")
 	b.WriteString(styles.ActiveItem.Render(m.flowhubQuery))
-	if !m.inputMode {
-		b.WriteString("_")
-	}
 	b.WriteString("\n\n")
 
-	// Filter results
 	var filtered []flowhub.Workflow
 	q := strings.ToLower(m.flowhubQuery)
 	for _, w := range m.flowhubResults {
